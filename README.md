@@ -3,17 +3,33 @@
 Codey is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. Codey also comes with a pre-built email login flow so you can start using it right away in your Rails application.
 
 ## Installation
-Add this line to your application's Gemfile by executing:
+
+Add this line to your Rails application's Gemfile by executing:
 
 ```bash
 $ bundle add codey
 ```
 
-Or install it yourself as:
+Next copy over the migrations:
 
 ```bash
-$ gem install codey
+$ rake codey_engine:install:migrations
 ```
+
+Then run the migrations:
+
+```bash
+$ rake db:migrate
+```
+
+Then add to the routes file:
+
+```ruby
+# Add to routes.rb
+resource :email_authentication, to: "codey/email_authentication"
+```
+
+Finally, restart the development server and head to `http://localhost:3000/email_authentication/new`.
 
 ## Why bother?
 

@@ -1,0 +1,29 @@
+<h1>Verify login code</h1>
+
+<p>Look for a 6 digit code in the inbox or spam folder</p>
+
+<%= form_with model: @secret, url: url_for(action: :update), data: { turbo: false }, method: :patch do |f| %>
+  <%= f.hidden_field :salt %>
+
+  <div>
+    <%= f.label :code %>
+    <%= f.text_field :code %>
+  </div>
+
+  <div>
+    <%= f.submit "Continue" %>
+  </div>
+<% end %>
+
+<p>
+  Launch
+  <%= link_to "Gmail", "https://gmail.com/", target: "_blank" %>
+  |
+  <%= link_to "Outlook", "https://outlook.live.com/", target: "_blank" %>
+  |
+  <%= link_to "Yahoo Mail", "https://mail.yahoo.com/", target: "_blank" %>
+</p>
+
+
+<%= h @secret.inspect %>
+<%= h @secret.errors.inspect %>

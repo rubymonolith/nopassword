@@ -1,0 +1,14 @@
+<h1>Get a login code</h1>
+
+<p>We'll email you a login code so we can securely get you to your account</p>
+
+<%= form_with model: @email_code, url: url_for(action: :create), data: { turbo: false } do |f| %>
+  <div>
+    <%= f.label :email %>
+    <%= f.email_field :email %>
+  </div>
+
+  <div>
+    <%= f.submit "Continue" %>
+  </div>
+<% end %>

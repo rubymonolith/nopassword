@@ -20,13 +20,19 @@ class Codey::Secret < ApplicationRecord
   validates :expires_at, presence: true
   validate :expires_at_exceeded
 
+  # 6 digit random numeric code
+  MAXIMUM_RANDOM_NUMBER = 999_999
+
   # Initialize new models with all the stuff needed to encrypt
   # and store the data.
   after_initialize :assign_defaults, unless: :persisted?
 
   before_validation :encrypt_sign_and_persist_data
 
-  attr_accessor :code
+  attr_reader :code
+  def code=(code)
+    @code = code.to_s if code
+  end
 
   attr_writer :data
   def data
@@ -47,15 +53,16 @@ class Codey::Secret < ApplicationRecord
     end
 
     def decrypt_and_verify
-      # If this isn't persisted then we can't keep track of the attempts to decrypt, which
-      # would render this whole thing useless.
-      raise "#{self.class.name} must be persisted before decrypting" unless persisted?
+      # If the model isn't persisted, then return a nil value.
+      return nil unless persisted?
+
       decrement! :remaining_attempts
       encryptor.decrypt_and_verify encrypted_data
     end
 
     def assign_defaults
       self.salt = Codey::Encryptor.generate_salt
+      self.code ||= self.class.generate_random_code
       self.expires_at ||= TIME_TO_LIVE.from_now
       self.remaining_attempts ||= MAXIMUM_VERIFICATION_ATTEMPTS
     end
@@ -70,5 +77,10 @@ class Codey::Secret < ApplicationRecord
 
     def expires_at_exceeded
       errors.add(:expires_at, "has passed") if has_expired?
+    end
+
+    # Generates a random numeric code for use by Codey.
+    def self.generate_random_code
+      SecureRandom.random_number MAXIMUM_RANDOM_NUMBER
     end
 end
