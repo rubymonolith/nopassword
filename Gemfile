@@ -6,6 +6,8 @@ gemspec
 
 gem "sqlite3"
 
+gem "pry"
+
 gem "sprockets-rails"
 
 # Start debugger with binding.b [https://github.com/ruby/debug]
