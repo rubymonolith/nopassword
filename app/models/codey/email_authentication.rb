@@ -6,7 +6,27 @@ class Codey::EmailAuthentication < Codey::Model
     presence: true,
     format: { with: URI::MailTo::EMAIL_REGEXP }
 
-  def create_secret
-    Codey::Secret.create! data: email
+  def verification
+    # We don't want the code in the verification, otherwise
+    # the user will set it on the subsequent request, which
+    # would undermine the whole thing.
+    Codey::Verification.new(code: nil, salt: secret.salt) if valid?
   end
+
+  def code
+    secret.code if valid?
+  end
+
+  def destroy!
+    secret.destroy!
+  end
+
+  private
+    def create_secret
+      Codey::Secret.create! data: email
+    end
+
+    def secret
+      @secret ||= create_secret
+    end
 end

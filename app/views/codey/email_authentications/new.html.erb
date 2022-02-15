@@ -2,10 +2,10 @@
 
 <p>We'll email you a login code so we can securely get you to your account</p>
 
-<%= form_with model: @email_code, url: url_for(action: :create), data: { turbo: false } do |f| %>
+<%= form_with model: @email_authentication, url: url_for(action: :create), data: { turbo: false } do |f| %>
   <div>
     <%= f.label :email %>
-    <%= f.email_field :email %>
+    <%= f.email_field :email, autofocus: true %>
   </div>
 
   <div>

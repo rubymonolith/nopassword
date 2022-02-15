@@ -1,21 +1,17 @@
 class Codey::EmailAuthenticationsController < ApplicationController
-  before_action :assign_secret, only: %i[edit update destroy]
+  before_action :assign_verification, only: %i[edit update destroy]
 
   def new
-    @email_code = Codey::EmailAuthentication.new
+    @email_authentication = Codey::EmailAuthentication.new
   end
 
   def create
-    @email_code = Codey::EmailAuthentication.new(email_code_params)
+    @email_authentication = Codey::EmailAuthentication.new(email_authentication_params)
 
-    if @email_code.valid?
-      # Generate the secret.
-      @secret = @email_code.create_secret
-      # Deliver the secret via email
-
-      # Now clear the code and decrypted data so the end-user
-      # has to retreive the information via email.
-      @secret.clear unless Rails.env.development?
+    if @email_authentication.valid?
+      deliver_email @email_authentication
+      @verification = @email_authentication.verification
+      # Next up we want to display the verify screen.
       render :edit
     else
       render :new, status: :unprocessable_entity
@@ -23,19 +19,38 @@ class Codey::EmailAuthenticationsController < ApplicationController
   end
 
   def destroy
-    @secret.destroy!
+    @verification.destroy!
   end
 
   def update
-    if @secret.update secret_params
-      redirect_to root_url
+    if @verification.valid?
+      valid_verification @verification.data
     else
       render :edit, status: :unprocessable_entity
     end
   end
 
+  protected
+    # Override this with your own logic to do something with the valid data. For
+    # example, you might setup the current user session here via:
+    #
+    # ```
+    # def valid(email)
+    #   session[:user_id] = User.find_or_create_by(email: email)
+    #   redirect_to dashboard_url
+    # end
+    # ```
+    def valid_verification(email)
+      redirect_to root_url
+    end
+
+    # Email the user the secret, or do something to it.
+    def deliver_email(verification)
+      Rails.logger.debug "The super secret code is #{verification.code}"
+    end
+
   private
-    def email_code_params
+    def email_authentication_params
       params.require(:codey_email_authentication).permit(:email)
     end
 
@@ -43,8 +58,12 @@ class Codey::EmailAuthenticationsController < ApplicationController
       params.require(:codey_secret).permit(:code, :salt)
     end
 
-    def assign_secret
-      @secret = find_secret
+    def verification_params
+      params.require(:codey_verification).permit(:code, :salt)
+    end
+
+    def assign_verification
+      @verification = Codey::Verification.new(verification_params)
     end
 
     def find_secret

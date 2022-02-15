@@ -18,16 +18,21 @@ class Codey::Secret < ApplicationRecord
   TIME_TO_LIVE = 5.minutes
 
   validates :expires_at, presence: true
-  validate :expires_at_exceeded
+  validate :expiration
 
-  # 6 digit random numeric code
-  MAXIMUM_RANDOM_NUMBER = 999_999
+  # 6 digit random code by default
+  RANDOM_CODE_LENGTH = 6
+
+  # Numeric to make input a tad easier with the number pad.
+  RANDOM_CODE_CHARACTERS = [*'0'..'9']
+  # This is what it would look like for alphanumeric, sans lowercase.
+  # RANDOM_CODE_CHARACTERS = [*'A'..'Z', *'0'..'9']
 
   # Initialize new models with all the stuff needed to encrypt
   # and store the data.
   after_initialize :assign_defaults, unless: :persisted?
 
-  before_validation :encrypt_sign_and_persist_data
+  before_validation :encrypt_data
 
   attr_reader :code
   def code=(code)
@@ -43,21 +48,13 @@ class Codey::Secret < ApplicationRecord
     Time.now > expires_at
   end
 
-  def clear
-    @data = @code = nil
+  def has_exceeded_verification_attempts?
+    not remaining_attempts.positive?
   end
 
   private
     def encryptor
       Codey::Encryptor.new(secret_key: code, salt: salt)
-    end
-
-    def decrypt_and_verify
-      # If the model isn't persisted, then return a nil value.
-      return nil unless persisted?
-
-      decrement! :remaining_attempts
-      encryptor.decrypt_and_verify encrypted_data
     end
 
     def assign_defaults
@@ -67,7 +64,15 @@ class Codey::Secret < ApplicationRecord
       self.remaining_attempts ||= MAXIMUM_VERIFICATION_ATTEMPTS
     end
 
-    def encrypt_sign_and_persist_data
+    def decrypt_and_verify
+      return nil if encrypted_data.nil?
+      return nil if salt.nil?
+      return nil if code.nil?
+
+      encryptor.decrypt_and_verify encrypted_data
+    end
+
+    def encrypt_data
       self.encrypted_data = encrypt_and_sign
     end
 
@@ -75,12 +80,17 @@ class Codey::Secret < ApplicationRecord
       encryptor.encrypt_and_sign data
     end
 
-    def expires_at_exceeded
-      errors.add(:expires_at, "has passed") if has_expired?
+    def expiration
+      errors.add(:expires_at, "has been exceeded") if has_expired?
     end
 
     # Generates a random numeric code for use by Codey.
-    def self.generate_random_code
-      SecureRandom.random_number MAXIMUM_RANDOM_NUMBER
+    def self.generate_random_code(characters: RANDOM_CODE_CHARACTERS, length: RANDOM_CODE_LENGTH)
+      # Why not `SecureRandom#rand`? I don't actually want a number; I want a code, with
+      # leading zeros. This is the easiest way to generate that and pad it.
+      #
+      # This really should be a public API, but alas, its not, so I have to call
+      # it privately and pass it the characters I want this to generate for the code.
+      SecureRandom.send :choose, characters, length
     end
 end

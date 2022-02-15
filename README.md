@@ -76,6 +76,12 @@ The salt is not emailed or distributed to the end-user: it is kept in the browse
 
 In addition to the salt and remaining attempts, a secret also has a time-to-live, which limits the amount of time a user has to guess the secret.
 
+#### Does not store personally identifying information ("PII")
+
+Codey makes a best effort to prevent PII from being stored on the server during the authentication & authorization process. Instead the data is persisted on the client via a `data` key, and is verified on each request to ensure the client did not tamper with the orignal PII for the final authentication request. The PII is revealed after the user successfully verifies their email address.
+
+Code does not prevent other pieces of your infrastructure from logging PII, so you'll need to do your dilligence to ensure nothing is logged if your goal is to provide your users with strong privacy garauntees.
+
 ## Usage
 
 ### Routes

@@ -57,8 +57,7 @@ RSpec.describe Codey::Secret, type: :model do
     describe "decrypting past maximum remaining attempts" do
       let(:remaining_attempts) { 0 }
       it "raises exception" do
-        subject.clear
-        expect{subject.data}.to raise_error{ActiveSupport::MessageEncryptor::InvalidMessage}
+        expect(subject.data).to be_nil
       end
     end
   end

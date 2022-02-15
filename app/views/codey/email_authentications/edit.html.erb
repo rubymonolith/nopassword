@@ -2,12 +2,12 @@
 
 <p>Look for a 6 digit code in the inbox or spam folder</p>
 
-<%= form_with model: @secret, url: url_for(action: :update), data: { turbo: false }, method: :patch do |f| %>
+<%= form_with model: @verification, url: url_for(action: :update), data: { turbo: false }, method: :patch do |f| %>
   <%= f.hidden_field :salt %>
 
   <div>
     <%= f.label :code %>
-    <%= f.text_field :code %>
+    <%= f.text_field :code, autofocus: true %>
   </div>
 
   <div>
@@ -24,6 +24,5 @@
   <%= link_to "Yahoo Mail", "https://mail.yahoo.com/", target: "_blank" %>
 </p>
 
-
-<%= h @secret.inspect %>
-<%= h @secret.errors.inspect %>
+<%= h @verification.inspect %>
+<%= h @verification.errors.inspect %>
