@@ -22,11 +22,11 @@ class Codey::EmailAuthentication < Codey::Model
   end
 
   private
-    def create_secret
-      Codey::Secret.create! data: email
-    end
-
     def secret
       @secret ||= create_secret
+    end
+
+    def create_secret
+      Codey::Secret.create! data: email
     end
 end

@@ -1,0 +1,3 @@
+Enter the code below into your open browser window to verify your email address.
+
+<%= @authentication.code %>

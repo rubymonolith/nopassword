@@ -45,8 +45,8 @@ class Codey::EmailAuthenticationsController < ApplicationController
     end
 
     # Email the user the secret, or do something to it.
-    def deliver_email(verification)
-      Rails.logger.debug "The super secret code is #{verification.code}"
+    def deliver_email(authentication)
+      Codey::EmailAuthenticationMailer.with(authentication: authentication).notification_email.deliver
     end
 
   private
