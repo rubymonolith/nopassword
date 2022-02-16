@@ -48,9 +48,13 @@ RSpec.describe Codey::Secret, type: :model do
       let(:remaining_attempts) { 0 }
       it { is_expected.to_not be_valid }
     end
+    describe "invalid with -1 remaining attempts" do
+      let(:remaining_attempts) { -1 }
+      it { is_expected.to_not be_valid }
+    end
   end
 
-  context "existing secret" do
+  context "persisted secret" do
     before { secret.save! }
     subject { Codey::Secret.find_by_salt! secret.salt }
 
