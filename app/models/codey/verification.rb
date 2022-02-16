@@ -2,6 +2,8 @@ class Codey::Verification < Codey::Model
   delegate \
       :has_expired?,
       :has_remaining_attempts?,
+      :expires_at,
+      :remaining_attempts,
     to: :secret,
     allow_nil: true
 
