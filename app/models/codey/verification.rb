@@ -1,9 +1,7 @@
-require "uri"
-
 class Codey::Verification < Codey::Model
   delegate \
       :has_expired?,
-      :has_exceeded_verification_attempts?,
+      :has_remaining_attempts?,
     to: :secret,
     allow_nil: true
 
@@ -22,12 +20,10 @@ class Codey::Verification < Codey::Model
 
   private
     def code_authenticity
+      return errors.add(:code, "is incorrect") if secret.nil?
       secret.code = code
       @data = secret.data
-    # rescue ActiveRecord::RecordNotFound
-    #   errors.add(:salt, "is incorrect")
-    # rescue ActiveSupport::MessageEncryptor::InvalidMessage
-    rescue
+    rescue ActiveRecord::RecordNotFound, ActiveSupport::MessageEncryptor::InvalidMessage
       errors.add(:code, "is incorrect")
     end
 
@@ -36,7 +32,7 @@ class Codey::Verification < Codey::Model
     end
 
     def code_verification_attempts
-      errors.add(:code, "verification attempts have been exceeded") if has_exceeded_verification_attempts?
+      errors.add(:code, "verification attempts have been exceeded") unless has_remaining_attempts?
     end
 
     def secret

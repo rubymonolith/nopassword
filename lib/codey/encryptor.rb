@@ -3,13 +3,12 @@ module Codey
   class Encryptor
     KEY_LENGTH = ActiveSupport::MessageEncryptor.key_len
 
-    attr_reader :salt, :key_length
+    def initialize(secret_key:, salt: self.class.generate_salt, key_length: KEY_LENGTH)
+      raise "salt can't be nil" if salt.nil?
+      raise "secret_key can't be nil" if secret_key.nil?
 
-    def initialize(secret_key:, salt: self.class.generate_salt)
-      @key_length = KEY_LENGTH
-      @salt = salt
-      composite_salt = [secret_key_base, salt].join
-      key   = ActiveSupport::KeyGenerator.new(secret_key).generate_key(salt, @key_length)
+      # binding.pry if secret_key.nil?
+      key = ActiveSupport::KeyGenerator.new(secret_key).generate_key(salt, key_length)
       @crypt = ActiveSupport::MessageEncryptor.new(key)
     end
 
@@ -19,10 +18,6 @@ module Codey
 
     def decrypt_and_verify(encrypted_data, *args, **kwargs)
       @crypt.decrypt_and_verify(encrypted_data, *args, **kwargs)
-    end
-
-    def secret_key_base
-      Rails.configuration.secret_key_base
     end
 
     def self.generate_salt(key_length: KEY_LENGTH)

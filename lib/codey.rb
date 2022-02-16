@@ -1,5 +1,6 @@
 require "codey/version"
 require "codey/encryptor"
+require "codey/random_code_generator"
 require "pathname"
 
 module Codey
@@ -8,5 +9,6 @@ module Codey
   end
 end
 
-# The engine needs the root path to load first.
+# The engine needs Codey.root to load first so it can configure paths
+# into the Codey gem properly.
 require "codey/engine"

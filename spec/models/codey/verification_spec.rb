@@ -40,4 +40,7 @@ RSpec.describe Codey::Verification, type: :model do
       it { is_expected.to be_invalid }
     end
   end
+
+  describe "#remaining_attempts"
+  describe "#ttl"
 end
