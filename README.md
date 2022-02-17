@@ -1,6 +1,6 @@
 # Codey
 
-Codey is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. Codey also comes with a pre-built email login flow so you can start using it right away in your Rails application.
+Codey is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. Codey also comes with a pre-built "Login with Email" flow so you can start using it right away in your Rails application.
 
 ## Installation
 
@@ -41,22 +41,24 @@ Passwords are a huge pain. How you ask?
 
 3. **Password fatigue** - People get tired of creating passwords for a website. Its a breath of fresh air when they can plugin an email address, get a code, and not have to manage yet another password.
 
-
 ## Security
 
-It's paramount to understand how your authentication systems are working so you can assess whether or not the risks they present are worth it.
+It's paramount to understand how your authentication systems are working so you can assess whether or not the risks they present are worth it. Codey is no different; it makes certain trade-offs that you need to assess for your application.
 
 ### How it works
 
 1. User requests a code by entering an email address. The email address is validated based on if its well-formed or not. No other validations take place.
 
-2. If the email address is well-formed, Rails attempts sends an email to that address with the code.
+2. If the email address is well-formed, Rails generates a random 6 digit number and a salt. The 6 digit number is emailed to the end-user and the salt is persisted in the browser they're using to login to the application.
 
-3. Rails also encrypts the email address via a `Codey::Secret`, which can only be decrypted with the code emailed to the user. Additionally, a salt is created that's stored in the users browser that is also used as the key to find the secret on the server. The combination of the code and the salt, provided by the user, is what's needed to unlock the secret.
+3. Rails also encrypts the email address via a `Codey::Secret`, The combination of the code and the salt, provided by the user, is what's needed to unlock the secret.
 
-4. The user receives the email, views the code, and either enters or copies it into the text field.
-  1. If they enter the wrong code, the remaining attempts is decremented. If they exhaust all attempts, they have to request a new code and start the process over.
-  2. If the user enters the correct code, the code is deemed authentic and the flow is allowed to continue. The secret that's unlocked then becomes available to the server and can be deemed as authentic, provided the developer used a proper side-channel that's reasonably secure for the risk profile.
+4. The user receives the email, views the code, and enters it into the open browser window.
+  1. If they enter the wrong code, the `remaining_attempts` field is decremented. If they exhaust all attempts, they have to request a new code and start the process over.
+  2. If the end-user waits until after the `expires_at` field to enter the, they have to request a new code and start the process over.
+  3. If the user enters the correct code within the alloted `remaining_attempts` and `expires_at`, the `data` from the `Secret` is decrypted and made available to your application.
+
+Worth noting; none of the steps above require a cookie to function properly.
 
 ### Features
 
@@ -72,15 +74,15 @@ The salt is hidden from the user by embedding it into the form payload that's po
 
 The salt is not emailed or distributed to the end-user: it is kept in the browser they're using to authenticate. If an attacker intercepted the code from the side-channel, they would also need access to the salt.
 
-#### Secret has a time-to-live
+#### Secrets expire
 
-In addition to the salt and remaining attempts, a secret also has a time-to-live, which limits the amount of time a user has to guess the secret.
+In addition to the salt and remaining attempts, a secret also has `Codey::Secret#expires_at`, which limits the amount of time a user has to guess the secret. By default, Codey gives end-users 5 minutes to enter the code.
 
 #### Does not store personally identifying information ("PII")
 
 Codey makes a best effort to prevent PII from being stored on the server during the authentication & authorization process. Instead the data is persisted on the client via a `data` key, and is verified on each request to ensure the client did not tamper with the orignal PII for the final authentication request. The PII is revealed after the user successfully verifies their email address.
 
-Code does not prevent other pieces of your infrastructure from logging PII, so you'll need to do your dilligence to ensure nothing is logged if your goal is to provide your users with strong privacy garauntees.
+Codey does not prevent other pieces of your infrastructure from logging PII, so you'll need to do your dilligence to ensure nothing is logged if your goal is to provide your users with strong privacy garauntees.
 
 ## Usage
 
