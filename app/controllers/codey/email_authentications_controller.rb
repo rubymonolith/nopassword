@@ -44,7 +44,7 @@ class Codey::EmailAuthenticationsController < ApplicationController
 
     # Override with your own logic to deliver a code to the user.
     def deliver_authentication(authentication)
-      Codey::EmailAuthenticationMailer.with(authentication: authentication).notification_email
+      Codey::EmailAuthenticationMailer.with(authentication: authentication).notification_email.deliver
     end
 
   private
