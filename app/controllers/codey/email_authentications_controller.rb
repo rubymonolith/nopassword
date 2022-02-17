@@ -3,6 +3,9 @@ class Codey::EmailAuthenticationsController < ApplicationController
   before_action :assign_email_authentication, only: :create
   before_action :initialize_and_assign_email_authentication, only: :new
 
+  # These are needed to make wiring up forms a little easier for the developer.
+  helper_method :update_url, :create_url
+
   def new
   end
 
@@ -55,7 +58,7 @@ class Codey::EmailAuthenticationsController < ApplicationController
     # example, you might want to tweak the flash message that's displayed
     # or redirect them to a page other than the one where they'd re-verify.
     def verification_exceeded_attempts(verification)
-      flash_error "The number of times the code can be tried has been exceeded."
+      flash[:codey_error] =  "The number of times the code can be tried has been exceeded."
       redirect_to url_for(action: :new)
     end
 
@@ -63,12 +66,16 @@ class Codey::EmailAuthenticationsController < ApplicationController
     # example, you might want to tweak the flash message that's displayed
     # or redirect them to a page other than the one where they'd re-verify.
     def verification_expired(verification)
-      flash_error "The code has expired."
+      flash[:codey_error] =  "The code has expired."
       redirect_to url_for(action: :new)
     end
 
-    def flash_error(message)
-      flash[:codey_error] = message
+    def create_url
+      url_for(action: :create)
+    end
+
+    def update_url
+      url_for(action: :update)
     end
 
   private

@@ -24,6 +24,10 @@ class Codey::Verification < Codey::Model
     not has_remaining_attempts?
   end
 
+  def persisted?
+    secret.present?
+  end
+
   private
     def code_authenticity
       return errors.add(:code, "is incorrect") if secret.nil?

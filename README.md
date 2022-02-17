@@ -110,6 +110,8 @@ Codey could be extended to work for other side-channel use cases too like login 
 
 ## Motivations
 
+Understanding why something was created is important to understanding it better.
+
 ### Why was Codey created?
 
 The gems I evaluated all did more than I wanted them to:
@@ -120,7 +122,7 @@ The gems I evaluated all did more than I wanted them to:
 
 Codey only worries about generating codes and creating a secure environment for end-users to validate the codes.
 
-### Why was it not built into devise, warden, or ominauth?
+### Why was it not built on devise, warden, or ominauth?
 
 I initially thought this would make for a great OmniAuth strategy, but quickly realized OmniAuth has a goal of being agnostic to rails and ships Rack middleware. I needed something more integrated into Rails controllers and views so that I could more easily extend in various projects.
 
