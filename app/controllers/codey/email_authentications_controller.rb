@@ -22,7 +22,11 @@ class Codey::EmailAuthenticationsController < ApplicationController
 
   def update
     if @verification.valid?
-      valid_verification @verification.data
+      verification_succeeded @verification.data
+    elsif @verification.has_expired?
+      verification_expired @verification
+    elsif @verification.has_exeeded_remaining_attempts?
+      verification_exceeded_attempts @verification
     else
       render :edit, status: :unprocessable_entity
     end
@@ -38,13 +42,33 @@ class Codey::EmailAuthenticationsController < ApplicationController
     #   redirect_to dashboard_url
     # end
     # ```
-    def valid_verification(email)
+    def verification_succeeded(email)
       redirect_to root_url
     end
 
     # Override with your own logic to deliver a code to the user.
     def deliver_authentication(authentication)
       Codey::EmailAuthenticationMailer.with(authentication: authentication).notification_email.deliver
+    end
+
+    # Override with logic for when verification attempts are exceeded. For
+    # example, you might want to tweak the flash message that's displayed
+    # or redirect them to a page other than the one where they'd re-verify.
+    def verification_exceeded_attempts(verification)
+      flash_error "The number of times the code can be tried has been exceeded."
+      redirect_to url_for(action: :new)
+    end
+
+    # Override with logic for when verification has expired. For
+    # example, you might want to tweak the flash message that's displayed
+    # or redirect them to a page other than the one where they'd re-verify.
+    def verification_expired(verification)
+      flash_error "The code has expired."
+      redirect_to url_for(action: :new)
+    end
+
+    def flash_error(message)
+      flash[:codey_error] = message
     end
 
   private

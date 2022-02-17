@@ -20,6 +20,10 @@ class Codey::Verification < Codey::Model
     @data if valid?
   end
 
+  def has_exeeded_remaining_attempts?
+    not has_remaining_attempts?
+  end
+
   private
     def code_authenticity
       return errors.add(:code, "is incorrect") if secret.nil?

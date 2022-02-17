@@ -1,14 +1,13 @@
 <h1>Get a login code</h1>
 
-<p>We'll email you a login code so we can securely get you to your account</p>
+<% if message = flash[:codey_error] %>
+  <p><%= message %> Please enter an email address to request a new login code and try again.</p>
+<% else %>
+  <p>We'll email you a login code so we can securely get you to your account</p>
+<% end %>
 
 <%= form_with model: @email_authentication, url: url_for(action: :create), data: { turbo: false } do |f| %>
-  <div>
-    <%= f.label :email %>
-    <%= f.email_field :email, autofocus: true %>
-  </div>
-
-  <div>
-    <%= f.submit "Continue" %>
-  </div>
+  <%= f.label :email %>
+  <%= f.email_field :email, autofocus: true %>
+  <%= f.submit "Continue" %>
 <% end %>
