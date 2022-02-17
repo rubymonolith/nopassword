@@ -84,13 +84,29 @@ Codey makes a best effort to prevent PII from being stored on the server during 
 
 Codey does not prevent other pieces of your infrastructure from logging PII, so you'll need to do your dilligence to ensure nothing is logged if your goal is to provide your users with strong privacy garauntees.
 
+#### No session or cookies required
+
+Codey persists its state on the client and in an encrypted format on the server; thus a session or cookie is not required for the verification process. This serves two purposes:
+
+1. **Privacy** - The initial authorization and verification process doesn't use cookies, so in theory if you run a tight ship, you won't have to display cookie banners during the authorization and verification process.
+
+2. **API compatibility** - The main reason Codey doesn't use cookies or sessions is so it can be used to authenticate via an API. This is useful for hybrid mobile app scenarios where a user may request a login code via a native UI.
+
 ## Usage
+
+Codey takes a PORO approach to its architecture, meaning you can extend its behavior via compositions and inheritence. Because of this PORO approach, most of the configuration happens on the objects themselves via inheritance instead of a configuration file. This is a similar approach to how [authologic](https://github.com/binarylogic/authlogic) implements their authentication framework for users.
+
+Because of this modular approach, Codey can be used out of the box for many use cases including:
+
+* Login via Email
+* Verify emails for logged in users
+* Reset passwords for logged in users
+
+Codey could be extended to work for other side-channel use cases too like login via SMS, QR code, etc.
 
 ### Routes
 
 ### Integration
-
-###
 
 ## Motivations
 
