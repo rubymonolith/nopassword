@@ -9,6 +9,4 @@ module Codey
   end
 end
 
-# The engine needs Codey.root to load first so it can configure paths
-# into the Codey gem properly.
 require "codey/engine"

@@ -2,6 +2,7 @@ class Codey::Verification < Codey::Model
   delegate \
       :has_expired?,
       :has_remaining_attempts?,
+      :has_authentic_code?,
       :expires_at,
       :remaining_attempts,
     to: :secret,
@@ -12,16 +13,24 @@ class Codey::Verification < Codey::Model
 
   attr_accessor :code
   validates :code, presence: true
-  validate :code_authenticity
   validate :code_expiration
   validate :code_verification_attempts
+  validate :code_authenticity
 
-  def data
-    @data if valid?
+  attr_accessor :data
+  validates :data, presence: true
+
+  def valid?(*args, **kwargs)
+    secret.decrement! :remaining_attempts if persisted?
+    super(*args, **kwargs)
   end
 
-  def has_exeeded_remaining_attempts?
+  def has_exceeded_attempts?
     not has_remaining_attempts?
+  end
+
+  def has_incorrect_code?
+    not has_authentic_code?
   end
 
   def persisted?
@@ -30,11 +39,7 @@ class Codey::Verification < Codey::Model
 
   private
     def code_authenticity
-      return errors.add(:code, "is incorrect") if secret.nil?
-      secret.code = code
-      @data = secret.data
-    rescue ActiveRecord::RecordNotFound, ActiveSupport::MessageEncryptor::InvalidMessage
-      errors.add(:code, "is incorrect")
+      errors.add(:code, "is incorrect") if has_incorrect_code?
     end
 
     def code_expiration
@@ -42,10 +47,16 @@ class Codey::Verification < Codey::Model
     end
 
     def code_verification_attempts
-      errors.add(:code, "verification attempts have been exceeded") unless has_remaining_attempts?
+      errors.add(:code, "verification attempts have been exceeded") if has_exceeded_attempts?
     end
 
     def secret
-      @secret ||= Codey::Secret.find_by_salt salt
+      Codey::Secret.find_by_digest(salt: salt, data: data).tap do |secret|
+        secret.code = code if secret
+      end
+    end
+
+    def decrement_remaining_attempts
+      secret.decement! :remaining_attempts
     end
 end

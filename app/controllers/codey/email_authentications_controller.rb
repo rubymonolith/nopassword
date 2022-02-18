@@ -28,7 +28,7 @@ class Codey::EmailAuthenticationsController < ApplicationController
       verification_succeeded @verification.data
     elsif @verification.has_expired?
       verification_expired @verification
-    elsif @verification.has_exeeded_remaining_attempts?
+    elsif @verification.has_exceeded_attempts?
       verification_exceeded_attempts @verification
     else
       render :edit, status: :unprocessable_entity
@@ -84,7 +84,7 @@ class Codey::EmailAuthenticationsController < ApplicationController
     end
 
     def verification_params
-      params.require(:codey_verification).permit(:code, :salt)
+      params.require(:codey_verification).permit(:code, :salt, :data)
     end
 
     def assign_verification

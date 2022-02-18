@@ -31,5 +31,8 @@ RSpec.describe Codey::EmailAuthentication, type: :model do
       # the code with the other side of the secret.
       expect(subject.code).to be_nil
     end
+    it "has data" do
+      expect(subject.data).to eql email
+    end
   end
 end

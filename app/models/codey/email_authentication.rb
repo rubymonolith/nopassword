@@ -10,32 +10,21 @@ class Codey::EmailAuthentication < Codey::Model
     # We don't want the code in the verification, otherwise
     # the user will set it on the subsequent request, which
     # would undermine the whole thing.
-    Codey::Verification.new(salt: salt) if valid?
-  end
-
-  def code
-    @code ||= generate_random_code if valid?
+    Codey::Verification.new(salt: salt, data: email) if valid?
   end
 
   def destroy!
     secret.destroy!
   end
 
-  protected
-    def generate_random_code
-      Codey::RandomCodeGenerator.generate_numeric_code
-    end
-
   private
-    def salt
-      secret.salt
-    end
+    delegate :code, :salt, to: :secret
 
     def secret
       @secret ||= create_secret
     end
 
     def create_secret
-      Codey::Secret.create! data: email, code: code
+      Codey::Secret.create!(data: email)
     end
 end

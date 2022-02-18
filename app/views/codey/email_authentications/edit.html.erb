@@ -4,6 +4,7 @@
 
 <%= form_with model: @verification, url: url_for(action: :update), data: { turbo: false }, method: :patch do |f| %>
   <%= f.hidden_field :salt %>
+  <%= f.hidden_field :data %>
   <%= f.label :code %>
   <%= f.text_field :code, autofocus: true %>
   <%= f.submit "Continue" %>

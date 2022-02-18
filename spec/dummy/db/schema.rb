@@ -12,12 +12,13 @@
 
 ActiveRecord::Schema[7.0].define(version: 2022_02_10_203235) do
   create_table "codey_secrets", force: :cascade do |t|
-    t.string "salt"
-    t.datetime "expires_at"
-    t.text "encrypted_data"
-    t.integer "remaining_attempts"
+    t.string "data_digest", null: false
+    t.string "code_digest", null: false
+    t.datetime "expires_at", null: false
+    t.integer "remaining_attempts", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index ["data_digest"], name: "index_codey_secrets_on_data_digest", unique: true
   end
 
 end
