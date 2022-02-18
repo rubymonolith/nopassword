@@ -1,5 +1,6 @@
 class Codey::Model
   include ActiveModel::Model
+  include ActiveModel::Validations::Callbacks
   extend ActiveModel::Naming
 
   def initialize(*args, **kwargs)

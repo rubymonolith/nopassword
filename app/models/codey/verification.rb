@@ -1,10 +1,11 @@
 class Codey::Verification < Codey::Model
   delegate \
       :has_expired?,
-      :has_remaining_attempts?,
+      :has_exceeded_attempts?,
       :has_authentic_code?,
       :expires_at,
       :remaining_attempts,
+      :decrement_remaining_attempts,
     to: :secret,
     allow_nil: true
 
@@ -20,14 +21,8 @@ class Codey::Verification < Codey::Model
   attr_accessor :data
   validates :data, presence: true
 
-  def valid?(*args, **kwargs)
-    secret.decrement! :remaining_attempts if persisted?
-    super(*args, **kwargs)
-  end
-
-  def has_exceeded_attempts?
-    not has_remaining_attempts?
-  end
+  # This fires, even if the validation fails.
+  after_validation :decrement_remaining_attempts
 
   def has_incorrect_code?
     not has_authentic_code?
@@ -51,12 +46,8 @@ class Codey::Verification < Codey::Model
     end
 
     def secret
-      Codey::Secret.find_by_digest(salt: salt, data: data).tap do |secret|
+      @secret ||= Codey::Secret.find_by_digest(salt: salt, data: data).tap do |secret|
         secret.code = code if secret
       end
-    end
-
-    def decrement_remaining_attempts
-      secret.decement! :remaining_attempts
     end
 end

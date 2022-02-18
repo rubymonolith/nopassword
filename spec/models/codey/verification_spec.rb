@@ -32,14 +32,25 @@ RSpec.describe Codey::Verification, type: :model do
     end
   end
 
+  describe "#data" do
+    context "tampered" do
+      before { verification.data = "tampered" }
+      it { is_expected.to be_invalid }
+    end
+    context "nil" do
+      before { verification.data = nil }
+      it { is_expected.to be_invalid }
+    end
+  end
+
   describe "#code_verification_attempts" do
-    it { is_expected.to have_remaining_attempts }
+    it { is_expected.to_not have_exceeded_attempts }
     context "exceeded" do
       let(:code) { "wrong code" }
       before do
         3.times { verification.valid? }
       end
-      it { is_expected.to_not have_remaining_attempts }
+      it { is_expected.to have_exceeded_attempts }
     end
   end
 

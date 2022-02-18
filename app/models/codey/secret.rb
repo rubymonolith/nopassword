@@ -19,17 +19,11 @@ class Codey::Secret < ApplicationRecord
   validates :expires_at, presence: true
   validate :expiration
 
-  # Don't save values that are less than zero or equal to or greater than
-  # the previous attempt. This means if the client or developer wanted to,
-  # they could decrement remaining attempts by more than 1 and it would save,
-  # but if it drops below 0 or is more than the previous value, it will not
-  # be considered valid.
   validates :remaining_attempts,
     presence: true,
     numericality: {
       only_integer: true,
       greater_than: 0 }
-  before_validation :decrement_remaining_attempts, on: :update
 
   # How long can the code live until it expires a new
   # code verification must be created
@@ -51,8 +45,8 @@ class Codey::Secret < ApplicationRecord
     Time.current > expires_at
   end
 
-  def has_remaining_attempts?
-    remaining_attempts.positive?
+  def has_exceeded_attempts?
+    not remaining_attempts.positive?
   end
 
   def has_tampered_data?
@@ -61,6 +55,10 @@ class Codey::Secret < ApplicationRecord
 
   def has_authentic_code?
     self.code_digest == digest_code
+  end
+
+  def decrement_remaining_attempts
+    decrement! :remaining_attempts
   end
 
   def self.find_by_digest(salt:, data:)
@@ -90,10 +88,6 @@ class Codey::Secret < ApplicationRecord
   end
 
   private
-    def decrement_remaining_attempts
-      decrement! :remaining_attempts
-    end
-
     def assign_defaults
       self.salt = Codey::Encryptor.generate_salt
       self.code ||= Codey::RandomCodeGenerator.generate_numeric_code
