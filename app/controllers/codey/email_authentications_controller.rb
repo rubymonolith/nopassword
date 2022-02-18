@@ -58,7 +58,7 @@ class Codey::EmailAuthenticationsController < ApplicationController
     # example, you might want to tweak the flash message that's displayed
     # or redirect them to a page other than the one where they'd re-verify.
     def verification_exceeded_attempts(verification)
-      flash[:codey_error] =  "The number of times the code can be tried has been exceeded."
+      flash[:codey_status] =  "The number of times the code can be tried has been exceeded."
       redirect_to url_for(action: :new)
     end
 
@@ -66,7 +66,7 @@ class Codey::EmailAuthenticationsController < ApplicationController
     # example, you might want to tweak the flash message that's displayed
     # or redirect them to a page other than the one where they'd re-verify.
     def verification_expired(verification)
-      flash[:codey_error] =  "The code has expired."
+      flash[:codey_status] =  "The code has expired."
       redirect_to url_for(action: :new)
     end
 
