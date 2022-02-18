@@ -9,6 +9,10 @@ class Codey::EmailAuthenticationsController < ApplicationController
   def new
   end
 
+  def show
+    redirect_to url_for(action: :new)
+  end
+
   def create
     if @email_authentication.valid?
       deliver_authentication @email_authentication
