@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    codey (0.1.0)
+    magiclink (0.1.0)
       rails (>= 7.0.1)
 
 GEM
@@ -184,7 +184,7 @@ PLATFORMS
   x86_64-darwin-21
 
 DEPENDENCIES
-  codey!
+  magiclink!
   pry
   rspec-rails
   sprockets-rails
