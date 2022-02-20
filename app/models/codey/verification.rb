@@ -6,6 +6,7 @@ class Codey::Verification < Codey::Model
       :expires_at,
       :remaining_attempts,
       :decrement_remaining_attempts,
+      :persisted?,
     to: :secret,
     allow_nil: true
 
@@ -26,10 +27,6 @@ class Codey::Verification < Codey::Model
 
   def has_incorrect_code?
     not has_authentic_code?
-  end
-
-  def persisted?
-    secret.present?
   end
 
   private
