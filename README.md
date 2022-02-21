@@ -1,5 +1,7 @@
 # Magiclink
 
+[![Ruby](https://github.com/rocketshipio/magiclink/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/magiclink/actions/workflows/ruby.yml) [![Maintainability](https://api.codeclimate.com/v1/badges/1dab74df8828deddd5f3/maintainability)](https://codeclimate.com/github/rocketshipio/magiclink/maintainability)
+
 Magiclink is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. Magiclink also comes with a pre-built "Login with Email" flow so you can start using it right away in your Rails application.
 
 ## Installation
