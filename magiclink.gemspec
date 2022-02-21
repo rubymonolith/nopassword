@@ -4,18 +4,19 @@ Gem::Specification.new do |spec|
   spec.name        = "magiclink"
   spec.version     = Magiclink::VERSION
   spec.authors     = ["Brad Gessler"]
-  spec.email       = ["bradgessler@gmail.com"]
+  spec.email       = ["brad@rocketship.io"]
   spec.homepage    = "https://github.com/rocketshipio/magiclink"
-  spec.summary     = "Send codes with an assertion and make the person validate"
+  spec.summary     = "Passwordless login to Rails applications via email"
+  spec.description = "Magiclink is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login to Rails applications via email, SMS, CLI, QR Codes, or any other side-channel."
   spec.license     = "MIT"
 
   # Prevent pushing this gem to RubyGems.org. To allow pushes either set the "allowed_push_host"
   # to allow pushing to a single host or delete this section to allow pushing to any host.
-  spec.metadata["allowed_push_host"] = "TODO: Set to 'http://mygemserver.com'"
+  spec.metadata["allowed_push_host"] = "https://rubygems.org'"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-  spec.metadata["changelog_uri"] = spec.homepage
+  spec.metadata["changelog_uri"] = "https://github.com/rocketshipio/magiclink/releases"
 
   spec.files = Dir.chdir(File.expand_path(__dir__)) do
     Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
