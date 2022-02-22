@@ -12,10 +12,10 @@ Add this line to your Rails application's Gemfile by executing:
 $ bundle add magiclink
 ```
 
-Next copy over the migrations:
+Next copy over the migrations, controllers, and views that you'll customize later:
 
 ```bash
-$ rake magiclink_engine:install:migrations
+$ bundle exec rails generate magiclink:install
 ```
 
 Then run the migrations:
@@ -24,14 +24,43 @@ Then run the migrations:
 $ rake db:migrate
 ```
 
-Then add to the routes file:
+Finally, restart the development server and head to `http://localhost:3000/email_authentication/new`.
+
+## Usage
+
+Once Magiclink is installed, it can be customized directly from the controller and views that were installed. Start by openining the `app/controllers/email_authentications_controller.rb` file and you'll see code that looks like:
 
 ```ruby
-# Add to routes.rb
-resource :email_authentication, to: "magiclink/email_authentication"
+class EmailAuthenticationsController < Magiclink::EmailAuthenticationsController
+    # Override with your own logic to do something with the valid data. For
+    # example, you might setup the current user session here via:
+    #
+    # ```
+    # def verification_succeeded(email)
+    #   self.current_user = User.find_or_create_by! email: email
+    #   redirect_to dashboard_url
+    # end
+    # ```
+    def verification_succeeded(email)
+      redirect_to root_url
+    end
+
+    # ...
+end
 ```
 
-Finally, restart the development server and head to `http://localhost:3000/email_authentication/new`.
+You'll want to customize this for your application. For example, if you already have an application that uses a library like `devise`, you could setup a login-by-email flow like this:
+
+```ruby
+class EmailAuthenticationsController < Magiclink::EmailAuthenticationsController
+    def verification_succeeded(email)
+      self.current_user = User.find_or_create_by! email: email
+      redirect_to root_url
+    end
+
+    # ...
+end
+```
 
 ## Why bother?
 
@@ -94,7 +123,7 @@ Magiclink persists its state on the client and in an encrypted format on the ser
 
 2. **API compatibility** - The main reason Magiclink doesn't use cookies or sessions is so it can be used to authenticate via an API. This is useful for hybrid mobile app scenarios where a user may request a login code via a native UI.
 
-## Usage
+## Architecture
 
 Magiclink takes a PORO approach to its architecture, meaning you can extend its behavior via compositions and inheritence. Because of this PORO approach, most of the configuration happens on the objects themselves via inheritance instead of a configuration file. This is a similar approach to how [authologic](https://github.com/binarylogic/authlogic) implements their authentication framework for users.
 
@@ -105,10 +134,6 @@ Because of this modular approach, Magiclink can be used out of the box for many 
 * Reset passwords for logged in users
 
 Magiclink could be extended to work for other side-channel use cases too like login via SMS, QR code, etc.
-
-### Routes
-
-### Integration
 
 ## Motivations
 
