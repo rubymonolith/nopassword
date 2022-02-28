@@ -183,6 +183,7 @@ GEM
     zeitwerk (2.5.4)
 
 PLATFORMS
+  x86_64-darwin-20
   x86_64-darwin-21
   x86_64-linux
 
@@ -194,4 +195,4 @@ DEPENDENCIES
   sqlite3
 
 BUNDLED WITH
-   2.2.32
+   2.3.7
