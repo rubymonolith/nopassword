@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    magiclink (0.1.0)
+    nopassword (0.1.0)
       rails (>= 7.0.1)
 
 GEM
@@ -188,7 +188,7 @@ PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
-  magiclink!
+  nopassword!
   pry
   rspec-rails
   sprockets-rails

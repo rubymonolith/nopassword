@@ -1,8 +1,0 @@
-Description:
-    Installs Magiclink in application by generating basic controller files
-
-Example:
-    bin/rails generate install EmailAuthentication
-
-    This will create:
-        app/controllers/email_authentication.rb

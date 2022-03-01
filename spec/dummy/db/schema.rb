@@ -11,14 +11,14 @@
 # It's strongly recommended that you check this file into your version control system.
 
 ActiveRecord::Schema[7.0].define(version: 2022_02_10_203235) do
-  create_table "magiclink_secrets", force: :cascade do |t|
+  create_table "nopassword_secrets", force: :cascade do |t|
     t.string "data_digest", null: false
     t.string "code_digest", null: false
     t.datetime "expires_at", null: false
     t.integer "remaining_attempts", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["data_digest"], name: "index_magiclink_secrets_on_data_digest", unique: true
+    t.index ["data_digest"], name: "index_nopassword_secrets_on_data_digest", unique: true
   end
 
 end

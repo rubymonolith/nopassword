@@ -1,21 +1,21 @@
-# Magiclink
+# NoPassword
 
-[![Ruby](https://github.com/rocketshipio/magiclink/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/magiclink/actions/workflows/ruby.yml) [![Maintainability](https://api.codeclimate.com/v1/badges/1dab74df8828deddd5f3/maintainability)](https://codeclimate.com/github/rocketshipio/magiclink/maintainability)
+[![Ruby](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml) [![Maintainability](https://api.codeclimate.com/v1/badges/1dab74df8828deddd5f3/maintainability)](https://codeclimate.com/github/rocketshipio/nopassword/maintainability)
 
-Magiclink is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. Magiclink also comes with a pre-built "Login with Email" flow so you can start using it right away in your Rails application.
+NoPassword is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. NoPassword also comes with a pre-built "Login with Email" flow so you can start using it right away in your Rails application.
 
 ## Installation
 
 Add this line to your Rails application's Gemfile by executing:
 
 ```bash
-$ bundle add magiclink
+$ bundle add nopassword
 ```
 
 Next copy over the migrations, controllers, and views that you'll customize later:
 
 ```bash
-$ bundle exec rails generate magiclink:install
+$ bundle exec rails generate nopassword:install
 ```
 
 Then run the migrations:
@@ -28,10 +28,10 @@ Finally, restart the development server and head to `http://localhost:3000/email
 
 ## Usage
 
-Once Magiclink is installed, it can be customized directly from the controller and views that were installed. Start by openining the `app/controllers/email_authentications_controller.rb` file and you'll see code that looks like:
+Once NoPassword is installed, it can be customized directly from the controller and views that were installed. Start by openining the `app/controllers/email_authentications_controller.rb` file and you'll see code that looks like:
 
 ```ruby
-class EmailAuthenticationsController < Magiclink::EmailAuthenticationsController
+class EmailAuthenticationsController < NoPassword::EmailAuthenticationsController
     # Override with your own logic to do something with the valid data. For
     # example, you might setup the current user session here via:
     #
@@ -52,7 +52,7 @@ end
 You'll want to customize this for your application. For example, if you already have an application that uses a library like `devise`, you could setup a login-by-email flow like this:
 
 ```ruby
-class EmailAuthenticationsController < Magiclink::EmailAuthenticationsController
+class EmailAuthenticationsController < NoPassword::EmailAuthenticationsController
     def verification_succeeded(email)
       self.current_user = User.find_or_create_by! email: email
       redirect_to root_url
@@ -74,7 +74,7 @@ Passwords are a huge pain. How you ask?
 
 ## Security
 
-It's paramount to understand how your authentication systems are working so you can assess whether or not the risks they present are worth it. Magiclink is no different; it makes certain trade-offs that you need to assess for your application.
+It's paramount to understand how your authentication systems are working so you can assess whether or not the risks they present are worth it. NoPassword is no different; it makes certain trade-offs that you need to assess for your application.
 
 ### How it works
 
@@ -82,7 +82,7 @@ It's paramount to understand how your authentication systems are working so you 
 
 2. If the email address is well-formed, Rails generates a random 6 digit number and a salt. The 6 digit number is emailed to the end-user and the salt is persisted in the browser they're using to login to the application.
 
-3. Rails also encrypts the email address via a `Magiclink::Secret`, The combination of the code and the salt, provided by the user, is what's needed to unlock the secret.
+3. Rails also encrypts the email address via a `NoPassword::Secret`, The combination of the code and the salt, provided by the user, is what's needed to unlock the secret.
 
 4. The user receives the email, views the code, and enters it into the open browser window.
   1. If they enter the wrong code, the `remaining_attempts` field is decremented. If they exhaust all attempts, they have to request a new code and start the process over.
@@ -93,11 +93,11 @@ Worth noting; none of the steps above require a cookie to function properly.
 
 ### Features
 
-Magiclink deploys the following features to mitigate brute force attacks:
+NoPassword deploys the following features to mitigate brute force attacks:
 
 #### Limit the number of times a code can be entered
 
-Magiclink ships with `Magiclink::Secret#remaining_attempts`, which is decremented each time the user enters a code. When there's 0 remaining attempts, the secret is destroyed and the user has to request a new, uniquely generated code. By default, Magiclink gives end-users 3 attempts to try the code.
+NoPassword ships with `NoPassword::Secret#remaining_attempts`, which is decremented each time the user enters a code. When there's 0 remaining attempts, the secret is destroyed and the user has to request a new, uniquely generated code. By default, NoPassword gives end-users 3 attempts to try the code.
 
 #### A randomly generated salt must also be provided with the code
 
@@ -107,39 +107,39 @@ The salt is not emailed or distributed to the end-user: it is kept in the browse
 
 #### Secrets expire
 
-In addition to the salt and remaining attempts, a secret also has `Magiclink::Secret#expires_at`, which limits the amount of time a user has to guess the secret. By default, Magiclink gives end-users 5 minutes to enter the code.
+In addition to the salt and remaining attempts, a secret also has `NoPassword::Secret#expires_at`, which limits the amount of time a user has to guess the secret. By default, NoPassword gives end-users 5 minutes to enter the code.
 
 #### Does not store personally identifying information ("PII")
 
-Magiclink makes a best effort to prevent PII from being stored on the server during the authentication & authorization process. Instead the data is persisted on the client via a `data` key, and is verified on each request to ensure the client did not tamper with the orignal PII for the final authentication request. The PII is revealed after the user successfully verifies their email address.
+NoPassword makes a best effort to prevent PII from being stored on the server during the authentication & authorization process. Instead the data is persisted on the client via a `data` key, and is verified on each request to ensure the client did not tamper with the orignal PII for the final authentication request. The PII is revealed after the user successfully verifies their email address.
 
-Magiclink does not prevent other pieces of your infrastructure from logging PII, so you'll need to do your dilligence to ensure nothing is logged if your goal is to provide your users with strong privacy garauntees.
+NoPassword does not prevent other pieces of your infrastructure from logging PII, so you'll need to do your dilligence to ensure nothing is logged if your goal is to provide your users with strong privacy garauntees.
 
 #### No session or cookies required
 
-Magiclink persists its state on the client and in an encrypted format on the server; thus a session or cookie is not required for the verification process. This serves two purposes:
+NoPassword persists its state on the client and in an encrypted format on the server; thus a session or cookie is not required for the verification process. This serves two purposes:
 
 1. **Privacy** - The initial authorization and verification process doesn't use cookies, so in theory if you run a tight ship, you won't have to display cookie banners during the authorization and verification process.
 
-2. **API compatibility** - The main reason Magiclink doesn't use cookies or sessions is so it can be used to authenticate via an API. This is useful for hybrid mobile app scenarios where a user may request a login code via a native UI.
+2. **API compatibility** - The main reason NoPassword doesn't use cookies or sessions is so it can be used to authenticate via an API. This is useful for hybrid mobile app scenarios where a user may request a login code via a native UI.
 
 ## Architecture
 
-Magiclink takes a PORO approach to its architecture, meaning you can extend its behavior via compositions and inheritence. Because of this PORO approach, most of the configuration happens on the objects themselves via inheritance instead of a configuration file. This is a similar approach to how [authologic](https://github.com/binarylogic/authlogic) implements their authentication framework for users.
+NoPassword takes a PORO approach to its architecture, meaning you can extend its behavior via compositions and inheritence. Because of this PORO approach, most of the configuration happens on the objects themselves via inheritance instead of a configuration file. This is a similar approach to how [authologic](https://github.com/binarylogic/authlogic) implements their authentication framework for users.
 
-Because of this modular approach, Magiclink can be used out of the box for many use cases including:
+Because of this modular approach, NoPassword can be used out of the box for many use cases including:
 
 * Login via Email
 * Verify emails for logged in users
 * Reset passwords for logged in users
 
-Magiclink could be extended to work for other side-channel use cases too like login via SMS, QR code, etc.
+NoPassword could be extended to work for other side-channel use cases too like login via SMS, QR code, etc.
 
 ## Motivations
 
 Understanding why something was created is important to understanding it better.
 
-### Why was Magiclink created?
+### Why was NoPassword created?
 
 The gems I evaluated all did more than I wanted them to:
 
@@ -147,7 +147,7 @@ The gems I evaluated all did more than I wanted them to:
 
 2. [devise-passwordless](https://rubygems.org/gems/devise-passwordless) - This would be a good solution if you're already using devise, but like passwordless, I didn't want a gem that got into the business of `current_user`. Additionally, for new passwordless-only applications, it doesn't make sense to start with devise since it makes many assumptions about requiring a username and password.
 
-Magiclink only worries about generating codes and creating a secure environment for end-users to validate the codes.
+NoPassword only worries about generating codes and creating a secure environment for end-users to validate the codes.
 
 ### Why was it not built on devise, warden, or ominauth?
 
@@ -157,7 +157,7 @@ Devise already has [devise-passwordless](https://rubygems.org/gems/devise-passwo
 
 ## Contributing
 
-I'd like to build out a set of controllers, views, etc. for common use cases for codes, like SMS, QRCode, and email. If you'd like to contribute, lets talk about it at https://github.com/rocketshipio/magiclink/discussions/categories/ideas before you code anything and go over architectural principals, how to distribute, etc.
+I'd like to build out a set of controllers, views, etc. for common use cases for codes, like SMS, QRCode, and email. If you'd like to contribute, lets talk about it at https://github.com/rocketshipio/nopassword/discussions/categories/ideas before you code anything and go over architectural principals, how to distribute, etc.
 
 ## License
 
