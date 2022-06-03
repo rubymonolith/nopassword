@@ -6,3 +6,5 @@ Example:
 
     This will create:
         app/controllers/email_authentication.rb
+        app/views/email_authentication_mailer/*.html.erb
+        app/views/email_authentications/*.html.erb
