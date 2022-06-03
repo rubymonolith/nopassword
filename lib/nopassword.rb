@@ -10,3 +10,8 @@ module NoPassword
 end
 
 require "nopassword/engine"
+
+# Blurg, without this require, the inflector won't properly inflect the `nopassword_engine:install:migrations`
+# task from the `rails g install nopassword:install` task.
+require_relative "../config/initializers/inflections.rb"
+
