@@ -14,7 +14,7 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
 
     context "valid params" do
       before { post "/email_authentication", params: { nopassword_email_authentication: params } }
-      it { is_expected.to be_ok }
+      it { is_expected.to be_accepted }
     end
   end
 

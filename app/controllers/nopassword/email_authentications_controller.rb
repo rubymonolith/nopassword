@@ -17,7 +17,7 @@ class NoPassword::EmailAuthenticationsController < ApplicationController
     if @email_authentication.valid?
       deliver_authentication @email_authentication
       @verification = @email_authentication.verification
-      render :edit
+      render :edit, status: :accepted
     else
       render :new, status: :unprocessable_entity
     end
