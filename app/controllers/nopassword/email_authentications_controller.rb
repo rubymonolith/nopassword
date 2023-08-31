@@ -1,7 +1,5 @@
 class NoPassword::EmailAuthenticationsController < ApplicationController
-  before_action :assign_verification, only: %i[edit update destroy]
-  before_action :assign_email_authentication, only: :create
-  before_action :initialize_and_assign_email_authentication, only: :new
+  before_action :assign_authentication
 
   # These are needed to make wiring up forms a little easier for the developer.
   helper_method :update_url, :create_url
@@ -10,33 +8,30 @@ class NoPassword::EmailAuthenticationsController < ApplicationController
   end
 
   def show
-    redirect_to url_for(action: :new)
+    fail "this should run through a model" if Rails.env.production?
+
+    if @authentication.authentic_token? params[:token]
+      authentication_succeeded @authentication.email
+      @authentication.destroy
+    else
+      render :edit, status: :unprocessable_entity
+    end
   end
 
   def create
-    if @email_authentication.valid?
-      deliver_authentication @email_authentication
-      @verification = @email_authentication.verification
-      render :edit, status: :accepted
+    @authentication.assign_attributes authentication_params
+    if @authentication.valid?
+      deliver_authentication @authentication.email, generate_email_verification_url
+      render :create, status: :accepted
     else
       render :new, status: :unprocessable_entity
     end
   end
 
   def destroy
-    @verification.destroy!
-  end
-
-  def update
-    if @verification.valid?
-      verification_succeeded @verification.data
-    elsif @verification.has_expired?
-      verification_expired @verification
-    elsif @verification.has_exceeded_attempts?
-      verification_exceeded_attempts @verification
-    else
-      render :edit, status: :unprocessable_entity
-    end
+    # We'll let users invalidate their verification link if they need to do so for
+    # any reasons.
+    @authentication.destroy
   end
 
   protected
@@ -49,57 +44,53 @@ class NoPassword::EmailAuthenticationsController < ApplicationController
     #   redirect_to dashboard_url
     # end
     # ```
-    def verification_succeeded(email)
+    def authentication_succeeded(email)
       redirect_to root_url
     end
 
     # Override with your own logic to deliver a code to the user.
-    def deliver_authentication(authentication)
-      NoPassword::EmailAuthenticationMailer.with(authentication: authentication).notification_email.deliver
+    def deliver_authentication(email, link)
+      NoPassword::EmailAuthenticationMailer.with(email: email, link: link).notification_email.deliver
     end
 
-    # Override with logic for when verification attempts are exceeded. For
-    # example, you might want to tweak the flash message that's displayed
-    # or redirect them to a page other than the one where they'd re-verify.
-    def verification_exceeded_attempts(verification)
-      flash[:nopassword_status] =  "The number of times the code can be tried has been exceeded."
-      redirect_to url_for(action: :new)
-    end
+    # # Override with logic for when authentication attempts are exceeded. For
+    # # example, you might want to tweak the flash message that's displayed
+    # # or redirect them to a page other than the one where they'd re-verify.
+    # def authentication_exceeded_attempts(authentication)
+    #   flash[:nopassword_status] =  "The number of times the code can be tried has been exceeded."
+    #   redirect_to url_for(action: :new)
+    # end
 
-    # Override with logic for when verification has expired. For
-    # example, you might want to tweak the flash message that's displayed
-    # or redirect them to a page other than the one where they'd re-verify.
-    def verification_expired(verification)
-      flash[:nopassword_status] =  "The code has expired."
-      redirect_to url_for(action: :new)
-    end
+    # # Override with logic for when authentication has expired. For
+    # # example, you might want to tweak the flash message that's displayed
+    # # or redirect them to a page other than the one where they'd re-verify.
+    # def authentication_expired(authentication)
+    #   flash[:nopassword_status] =  "The code has expired."
+    #   redirect_to url_for(action: :new)
+    # end
 
     def create_url
       url_for(action: :create)
     end
 
     def update_url
-      url_for(action: :update)
+      url_for(action: :updatem, id: params.fetch(:id))
     end
 
   private
-    def email_authentication_params
+    def authentication_params
       params.require(:nopassword_email_authentication).permit(:email)
     end
 
-    def verification_params
-      params.require(:nopassword_verification).permit(:code, :salt, :data)
+    def authentication_token
+      params.require(:id)
     end
 
-    def assign_verification
-      @verification = NoPassword::Verification.new(verification_params)
+    def assign_authentication
+      @authentication = NoPassword::EmailAuthentication.new(session: session)
     end
 
-    def assign_email_authentication
-      @email_authentication = NoPassword::EmailAuthentication.new(email_authentication_params)
-    end
-
-    def initialize_and_assign_email_authentication
-      @email_authentication = NoPassword::EmailAuthentication.new
+    def generate_email_verification_url
+      email_authentication_url(token: @authentication.generate_token)
     end
 end

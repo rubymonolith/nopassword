@@ -1,6 +1,7 @@
 class NoPassword::EmailAuthenticationMailer < ApplicationMailer
   def notification_email
-    @authentication = params[:authentication]
-    mail(to: @authentication.email, subject: "Verification code: #{@authentication.code}")
+    @email = params[:email]
+    @link = params[:link]
+    mail(to: @email, subject: "Verification link")
   end
 end

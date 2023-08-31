@@ -1,30 +1,60 @@
 require "uri"
 
 class NoPassword::EmailAuthentication < NoPassword::Model
-  attr_accessor :email
+  attribute :session
+  attribute :email, :string
+  attribute :expires_at, :time, default: -> { 5.minutes.from_now }
+  attribute :remaining_authentication_attempts, :integer, default: 3
+
+  delegate \
+      :authentic_code?,
+      :authentic_token?,
+      :generate_token,
+    to: :authenticator
+
   validates :email,
     presence: true,
     format: { with: URI::MailTo::EMAIL_REGEXP }
 
-  def verification
-    # We don't want the code in the verification, otherwise
-    # the user will set it on the subsequent request, which
-    # would undermine the whole thing.
-    NoPassword::Verification.new(salt: salt, data: email) if valid?
+  def destroy
+    session.destroy
   end
 
-  def destroy!
-    secret.destroy!
+  def email
+    session[:nopassword_unauthenticated_email]
   end
+
+  def email=(email)
+    session[:nopassword_unauthenticated_email] = email
+  end
+
+  def validate_token(token)
+  end
+
+  def validate_code(code)
+  end
+
+  def has_expired?
+  end
+
+  def has_exceeded_attempts?
+  end
+
+  # def update
+  #   if @verification.valid?
+  #     verification_succeeded @verification.data
+  #   elsif @verification.has_expired?
+  #     verification_expired @verification
+  #   elsif @verification.has_exceeded_attempts?
+  #     verification_exceeded_attempts @verification
+  #   else
+  #     render :edit, status: :unprocessable_entity
+  #   end
+  # end
 
   private
-    delegate :code, :salt, to: :secret
-
-    def secret
-      @secret ||= create_secret
-    end
-
-    def create_secret
-      NoPassword::Secret.create!(data: email)
+    def authenticator
+      validate!
+      @authenticator ||= NoPassword::Authenticator.new(session)
     end
 end

@@ -1,12 +1,12 @@
-<h1>Get a login code</h1>
+<h1>Get a login link</h1>
 
 <% if message = flash[:nopassword_status] %>
-  <p><%= message %> Enter an email address to request a new login code and try again.</p>
+  <p><%= message %> Enter an email address to request a new login link and try again.</p>
 <% else %>
-  <p>We'll email you a login code so we can securely get you to your account</p>
+  <p>We'll email you a login link so we can securely get you to your account</p>
 <% end %>
 
-<%= form_with model: @email_authentication, url: url_for(action: :create), data: { turbo: false } do |f| %>
+<%= form_with model: @authentication, url: url_for(action: :create), data: { turbo: false } do |f| %>
   <%= f.label :email %>
   <%= f.email_field :email, autofocus: true %>
   <%= f.submit "Continue" %>
