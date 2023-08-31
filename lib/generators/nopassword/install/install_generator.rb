@@ -14,9 +14,5 @@ module Nopassword
     def add_nopassword_routes
       route "resource :email_authentication"
     end
-
-    def copy_migration_file
-      rake "nopassword_engine:install:migrations"
-    end
   end
 end
