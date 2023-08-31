@@ -10,7 +10,7 @@ class NoPassword::EmailAuthenticationsController < ApplicationController
   def show
     fail "this should run through a model" if Rails.env.production?
 
-    if @authentication.authentic_token? params[:token]
+    if @authentication.authenticate_token params[:token]
       authentication_succeeded @authentication.email
       @authentication.destroy
     else

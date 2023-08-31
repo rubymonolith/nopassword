@@ -7,8 +7,6 @@ class NoPassword::EmailAuthentication < NoPassword::Model
   attribute :remaining_authentication_attempts, :integer, default: 3
 
   delegate \
-      :authentic_code?,
-      :authentic_token?,
       :generate_token,
     to: :authenticator
 
@@ -28,10 +26,12 @@ class NoPassword::EmailAuthentication < NoPassword::Model
     session[:nopassword_unauthenticated_email] = email
   end
 
-  def validate_token(token)
+  def authenticate_token(token)
+    authenticator.authentic_token? token
   end
 
-  def validate_code(code)
+  def authenticate_code(code)
+    authenticator.validate_code? token
   end
 
   def has_expired?
