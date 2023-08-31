@@ -15,7 +15,7 @@ class NoPassword::EmailAuthentication < NoPassword::Model
     format: { with: URI::MailTo::EMAIL_REGEXP }
 
   def destroy
-    session.destroy
+    session.delete :nopassword_unauthenticated_email
   end
 
   def email
