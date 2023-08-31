@@ -7,7 +7,6 @@ module NoPassword
       raise "salt can't be nil" if salt.nil?
       raise "secret_key can't be nil" if secret_key.nil?
 
-      # binding.pry if secret_key.nil?
       key = ActiveSupport::KeyGenerator.new(secret_key).generate_key(salt, key_length)
       @crypt = ActiveSupport::MessageEncryptor.new(key)
     end
