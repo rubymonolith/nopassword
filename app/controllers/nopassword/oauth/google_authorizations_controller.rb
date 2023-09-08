@@ -1,7 +1,7 @@
 module NoPassword
   class OAuth::GoogleAuthorizationsController < ApplicationController
-    CLIENT_ID = nil
-    CLIENT_SECRET = nil
+    CLIENT_ID = ENV["GOOGLE_CLIENT_ID"]
+    CLIENT_SECRET = ENV["GOOGLE_CLIENT_SECRET"]
     SCOPE = "openid email profile"
 
     AUTHORIZATION_URL = URI("https://accounts.google.com/o/oauth2/v2/auth")
@@ -48,10 +48,10 @@ module NoPassword
       # `callback_url` is where the user is sent back to after authenticating with the OAuth provider.
       def authorization_url
         AUTHORIZATION_URL.build.query(
-          client_id: CLIENT_ID,
+          client_id: client_id,
           redirect_uri: callback_url,
           response_type: "code",
-          scope: SCOPE,
+          scope: scope,
           state: form_authenticity_token
         )
       end
@@ -61,12 +61,24 @@ module NoPassword
       # The OAuth provider makes available.
       def request_access_token
         HTTP.post(TOKEN_URL, form: {
-          client_id: CLIENT_ID,
-          client_secret: CLIENT_SECRET,
+          client_id: client_id,
+          client_secret: client_secret,
           code: params.fetch(:code),
           grant_type: "authorization_code",
           redirect_uri: callback_url
         })
+      end
+
+      def client_id
+        self.class::CLIENT_ID
+      end
+
+      def client_secret
+        self.class::CLIENT_SECRET
+      end
+
+      def scope
+        self.class::SCOPE
       end
 
       def request_user_info(access_token:)
