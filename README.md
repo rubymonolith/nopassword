@@ -177,6 +177,16 @@ Then in `routes.rb` add the following:
 resource :google_authorization
 ```
 
+From your application, you'll need to kick off authorization flows by firing a non-Turbo POST request to `/google_authorization`. In this example, I create a `/google_authorization/new` page that is accessible via a `GET` request. In practice you'd probably make this a partial that you'd include on a `/sign-in` page.
+
+```erb
+<!-- ./app/views/google_authorization/new.html.erb -->
+<h1>Login with Google</h1>
+<% form_tag action: google_authorization_path do %>
+  <%= submit_tag "Login with Google" %>
+<% end %>
+```
+
 Don't forget to login to the Google Developer Console at https://code.google.com/apis/console/ and get your API keys for the ENV vars above and add the `/google_authorization` URL to the domains Google is authorized to redirect back to.
 
 ## Motivations
