@@ -4,6 +4,7 @@ require "zeitwerk"
 module NoPassword
   Loader = Zeitwerk::Loader.for_gem.tap do |loader|
     loader.inflector.inflect "nopassword" => "NoPassword"
+    loader.inflector.inflect "oauth" => "OAuth"
     loader.setup
   end
 

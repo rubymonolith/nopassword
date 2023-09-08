@@ -135,6 +135,50 @@ Because of this modular approach, NoPassword can be used out of the box for many
 
 NoPassword could be extended to work for other side-channel use cases too like login via SMS, QR code, etc.
 
+## OAuth Authorizations
+
+NoPassword has OAuth controllers that are designed to be the smallest possible integration with providers. To use them, create a controller in your Rails project and inherit from `NoPassword::OAuth::GoogleAuthorizationsController`
+
+```ruby
+# ./app/controllers/google_authorizations_controller.rb
+class GoogleAuthorizationsController < NoPassword::OAuth::GoogleAuthorizationsController
+  CLIENT_ID = ENV["GOOGLE_CLIENT_ID"]
+  CLIENT_SECRET = ENV["GOOGLE_CLIENT_SECRET"]
+  SCOPE = "openid email profile"
+
+  protected
+    # Here's what the callback returns.
+    # {"sub"=>"117509553887278399680",
+    #  "name"=>"Brad Gessler",
+    #  "given_name"=>"Brad",
+    #  "family_name"=>"Gessler",
+    #  "picture"=>"https://lh3.googleusercontent.com/a/AAcHTtcA4Mc7yx4ABlghdRp7GzkssdmccudQu6MhlItL259oTiJs=s96-c",
+    #  "email"=>"brad@example.com",
+    #  "email_verified"=>true,
+    #  "locale"=>"en"}
+    def authorization_succeeded(user_info)
+      user = User.find_or_create_by(email: user_info.fetch("email"))
+      user ||= user_info.fetch("name")
+
+      self.current_user = user
+      redirect_to root_url
+    end
+
+    def authorization_failed
+      # Handle the error, perhaps redirect to a different login screen.
+    end
+end
+```
+
+Then in `routes.rb` add the following:
+
+```ruby
+# ./config/routes.rb
+resource :google_authorization
+```
+
+Don't forget to login to the Google Developer Console at https://code.google.com/apis/console/ and get your API keys for the ENV vars above and add the `/google_authorization` URL to the domains Google is authorized to redirect back to.
+
 ## Motivations
 
 Understanding why something was created is important to understanding it better.
@@ -149,9 +193,13 @@ The gems I evaluated all did more than I wanted them to:
 
 NoPassword only worries about generating codes and creating a secure environment for end-users to validate the codes.
 
+Additionally, as I was using OmniAuth in my projects to handle OAuth authorizations, I noticed it felt more difficult than it should be, so I started creating OAuth controllers to simplify the process. I've included them here in case you find them useful.
+
 ### Why was it not built on devise, warden, or ominauth?
 
 I initially thought this would make for a great OmniAuth strategy, but quickly realized OmniAuth has a goal of being agnostic to rails and ships Rack middleware. I needed something more integrated into Rails controllers and views so that I could more easily extend in various projects.
+
+Additionally, I found OmniAuth was more difficult to configure for OAuth in Rails than it should be. OmniAuth required a `./config/initializers/omniauth.rb` file that builds a Rack middleware. This Rack middleware then had some hard coded URLs that would be intercepted from Rails, which made it difficult to reason between controller routes and Rack middleware routes. The NoPassword::OAuth controllers solve that problem by having both configuration and logic live in a single controller file.
 
 Devise already has [devise-passwordless](https://rubygems.org/gems/devise-passwordless), but it tries to do too much for my purposes by managing user authorization. I needed something that stopped short of managing user authorization.
 
