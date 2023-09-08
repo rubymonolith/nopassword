@@ -24,5 +24,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 7.0.1"
   spec.add_dependency "zeitwerk", "~> 2.0"
+  spec.add_dependency "http", "~> 5.1"
+  spec.add_dependency "uri-builder", "~> 0.1.5"
   spec.add_development_dependency "rspec-rails"
 end
