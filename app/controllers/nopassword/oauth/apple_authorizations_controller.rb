@@ -1,5 +1,7 @@
 module NoPassword
   # Implements OAuth flow as described at https://developer.apple.com/documentation/sign_in_with_apple/request_an_authorization_to_the_sign_in_with_apple_server
+  # Additional API documentation at:
+  #  - https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api
   class OAuth::AppleAuthorizationsController < ApplicationController
     CLIENT_ID = ENV["APPLE_CLIENT_ID"]
     TEAM_ID = ENV["APPLE_TEAM_ID"]
@@ -71,14 +73,34 @@ module NoPassword
         self.class::CLIENT_ID
       end
 
+      def team_id
+        self.class::TEAM_ID
+      end
+
+      def key_id
+        slef.class::KEY_ID
+      end
+
+      def private_key
+        ::OpenSSL::PKey::EC.new(self.class::PRIVATE_KEY)
+      end
+
       def decode_id_token(id_token)
         # Decode the ID token here. You will need a JWT decode library.
         # The decoded token will contain the user's information.
       end
 
       def generate_client_secret
-        # Generate the client secret using your private key, client ID, team ID, and key ID.
-        # You will need a JWT encode library to generate this client secret.
+        payload = {
+          iss: team_id,
+          aud: "https://appleid.apple.com",
+          sub: client_id,
+          iat: Time.now.to_i,
+          exp: Time.now.to_i + 60
+        }
+        headers = { kid: key_id }
+
+        ::JWT.encode(payload, private_key, "ES256", headers)
       end
 
       def scope

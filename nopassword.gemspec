@@ -24,5 +24,6 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 7.0.1"
   spec.add_dependency "zeitwerk", "~> 2.0"
+  spec.add_dependency "jwt", "~> 2.7"
   spec.add_development_dependency "rspec-rails"
 end
