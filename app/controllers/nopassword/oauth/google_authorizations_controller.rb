@@ -8,6 +8,12 @@ module NoPassword
     TOKEN_URL = URI("https://www.googleapis.com/oauth2/v4/token")
     USER_INFO_URL = URI("https://www.googleapis.com/oauth2/v3/userinfo")
 
+    include Routable
+
+    routes.draw do
+      resource :google_authorization, only: [:show, :create]
+    end
+
     before_action :validate_state_token, only: :show
 
     def create
