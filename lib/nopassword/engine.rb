@@ -5,3 +5,5 @@ module NoPassword
     config.action_mailer.preview_path = NoPassword.root.join("spec/mailers/previews")
   end
 end
+
+require "nopassword/action_dispatch/routing/mapper"

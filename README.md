@@ -2,7 +2,7 @@
 
 [![Ruby](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml) [![Maintainability](https://api.codeclimate.com/v1/badges/1dab74df8828deddd5f3/maintainability)](https://codeclimate.com/github/rocketshipio/nopassword/maintainability)
 
-NoPassword is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, or any other side-channel. NoPassword also comes with a pre-built "Login with Email" flow so you can start using it right away in your Rails application.
+NoPassword is a toolkit that makes it easy to implement temporary, secure login codes initiated from peoples' web browsers so they can login via email, SMS, CLI, QR Codes, OAuth, or any other side-channel. NoPassword also comes with a pre-built "Login with Email" flow so you can start using it right away in your Rails application.
 
 ## Installation
 
@@ -174,7 +174,7 @@ Then in `routes.rb` add the following:
 
 ```ruby
 # ./config/routes.rb
-resource :google_authorization
+nopassword GoogleAuthorizationsController
 ```
 
 From your application, you'll need to kick off authorization flows by firing a non-Turbo POST request to `/google_authorization`. In this example, I create a `/google_authorization/new` page that is accessible via a `GET` request. In practice you'd probably make this a partial that you'd include on a `/sign-in` page.
