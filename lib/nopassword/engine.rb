@@ -5,4 +5,4 @@ module NoPassword
   end
 end
 
-require "nopassword/action_dispatch/routing/mapper"
+require "extensions/action_dispatch/routing/mapper"
