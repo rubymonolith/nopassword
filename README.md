@@ -156,9 +156,9 @@ class GoogleAuthorizationsController < NoPassword::OAuth::GoogleAuthorizationsCo
     #  "email"=>"brad@example.com",
     #  "email_verified"=>true,
     #  "locale"=>"en"}
-    def authorization_succeeded(user_info)
-      user = User.find_or_create_by(email: user_info.fetch("email"))
-      user ||= user_info.fetch("name")
+    def authorization_succeeded(sso)
+      user = User.find_or_create_by(email: sso.fetch("email"))
+      user ||= sso.fetch("name")
 
       self.current_user = user
       redirect_to root_url
