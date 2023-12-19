@@ -28,10 +28,8 @@ module NoPassword
 
     extend ActiveSupport::Concern
 
-    class_methods do
-      def routes
-        @routes ||= Routes.new
-      end
+    included do
+      cattr_accessor :routes, default: Routes.new
     end
   end
 end
