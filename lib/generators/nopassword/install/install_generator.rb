@@ -16,7 +16,7 @@ module Nopassword
     end
 
     def copy_migration_file
-      rake "nopassword_engine:install:migrations"
+      rake "no_password_engine:install:migrations"
     end
   end
 end
