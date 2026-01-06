@@ -7,16 +7,12 @@ module Nopassword
     end
 
     def copy_view_files
-      directory NoPassword.root.join("app/views/nopassword/email_authentication_mailer"), 'app/views/email_authentication_mailer'
-      directory NoPassword.root.join("app/views/nopassword/email_authentications"), 'app/views/email_authentications'
+      directory NoPassword.root.join("app/views/nopassword/email_authentication_mailer"), "app/views/email_authentication_mailer"
+      directory NoPassword.root.join("app/views/nopassword/email_authentications"), "app/views/email_authentications"
     end
 
     def add_nopassword_routes
-      route "resource :email_authentication"
-    end
-
-    def copy_migration_file
-      rake "nopassword_engine:install:migrations"
+      route "nopassword EmailAuthenticationsController"
     end
   end
 end

@@ -1,0 +1,15 @@
+<h1>Confirm sign in</h1>
+
+<p>Click the button below to sign in as <strong><%= @authentication.email %></strong>.</p>
+
+<%= form_with url: show_url, method: :patch, data: { turbo: false } do |f| %>
+  <%= f.submit "Sign in" %>
+<% end %>
+
+<% if @verification&.errors&.any? %>
+  <p><%= @verification.errors.full_messages.to_sentence %></p>
+<% end %>
+
+<p>
+  <%= link_to "Cancel", url_for(action: :destroy), data: { turbo_method: :delete } %>
+</p>

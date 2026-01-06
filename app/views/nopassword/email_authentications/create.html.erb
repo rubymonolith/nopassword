@@ -1,0 +1,21 @@
+<h1>Check your email</h1>
+
+<p>We sent a sign-in link to <strong><%= @authentication.email %></strong>.</p>
+
+<p>Open the link in this browser to continue.</p>
+
+<p>
+  <small>
+    If you're checking email on a different device, copy the link and paste it here.
+  </small>
+</p>
+
+<p>
+  <%= link_to "Gmail", "https://gmail.com/", target: "_blank" %> |
+  <%= link_to "Outlook", "https://outlook.live.com/", target: "_blank" %> |
+  <%= link_to "Yahoo Mail", "https://mail.yahoo.com/", target: "_blank" %>
+</p>
+
+<p>
+  <%= link_to "Try a different email", url_for(action: :new) %>
+</p>
