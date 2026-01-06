@@ -17,7 +17,7 @@ module NoPassword
       end
 
       def challenge
-        @challenge ||= Challenge.new(@session, identifier: identifier)
+        @challenge ||= Challenge.new(@session, authentication: self, identifier:)
       end
 
       protected

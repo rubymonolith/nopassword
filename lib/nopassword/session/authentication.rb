@@ -20,7 +20,7 @@ module NoPassword
       end
 
       def challenge
-        @challenge ||= challenge_class.new(@session, identifier: identifier)
+        @challenge ||= challenge_class.new(@session, identifier:)
       end
 
       def verification(token:)
@@ -38,6 +38,20 @@ module NoPassword
 
       def save!
         save || raise(ActiveModel::ValidationError.new(self))
+      end
+
+      # Save without running validations - useful for syncing from challenge
+      def save_without_validation
+        @session[session_key] = attributes.compact
+        true
+      end
+
+      # Update session data, optionally yielding for modifications
+      def self.update(session, **)
+        new(session, **).tap do |instance|
+          yield instance if block_given?
+          instance.save_without_validation
+        end
       end
 
       def delete

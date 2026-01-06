@@ -21,16 +21,36 @@ module NoPassword
         valid?
       end
 
+      # For form routing - verification is always "persisted" (exists in session)
+      def persisted?
+        true
+      end
+
+      # For form routing - use the provided token as the ID
+      def to_param
+        provided_token
+      end
+
       def expired?
         return true if challenge.created_at.nil?
         Time.current > challenge.expires_at
+      end
+
+      # Returns true if no challenge exists in session (e.g., different browser)
+      def missing_challenge?
+        challenge.token.blank?
+      end
+
+      # Alias for clarity - this is the most common reason for missing challenge
+      def different_browser?
+        missing_challenge?
       end
 
       private
 
       def validate_token_present
         if challenge.token.blank?
-          errors.add(:base, "No authentication challenge found")
+          errors.add(:base, "This link must be opened in the same browser where you requested it. Please go back to that browser, or request a new link here.")
         elsif provided_token.blank?
           errors.add(:base, "No token provided")
         end

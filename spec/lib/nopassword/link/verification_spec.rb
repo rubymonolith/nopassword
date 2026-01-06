@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe NoPassword::Link::Verification do
   let(:session) { {} }
   let(:identifier) { "user@example.com" }
-  let(:challenge) { NoPassword::Link::Challenge.new(session, identifier: identifier) }
+  let(:challenge) { NoPassword::Link::Challenge.new(session, identifier:) }
   let(:provided_token) { challenge.token }
   let(:verification) { described_class.new(challenge: challenge, provided_token: provided_token) }
   subject { verification }
@@ -60,9 +60,17 @@ RSpec.describe NoPassword::Link::Verification do
         expect(verification.verify).to be false
       end
 
-      it "has base error" do
+      it "has base error about different browser" do
         verification.verify
-        expect(verification.errors[:base]).to include("No authentication challenge found")
+        expect(verification.errors[:base].first).to include("same browser")
+      end
+
+      it "reports different_browser? as true" do
+        expect(verification.different_browser?).to be true
+      end
+
+      it "reports missing_challenge? as true" do
+        expect(verification.missing_challenge?).to be true
       end
     end
 

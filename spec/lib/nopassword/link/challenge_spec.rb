@@ -3,7 +3,7 @@ require "rails_helper"
 RSpec.describe NoPassword::Link::Challenge do
   let(:session) { {} }
   let(:identifier) { "user@example.com" }
-  let(:challenge) { described_class.new(session, identifier: identifier) }
+  let(:challenge) { described_class.new(session, identifier:) }
   subject { challenge }
 
   describe "attributes" do
