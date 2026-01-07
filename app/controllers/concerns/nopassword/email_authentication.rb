@@ -5,14 +5,14 @@ module NoPassword
   #
   # Example:
   #   class SessionsController < ApplicationController
-  #     include NoPassword::ControllerConcern
+  #     include NoPassword::EmailAuthentication
   #
   #     def verification_succeeded(email)
   #       self.current_user = User.find_or_create_by(email: email)
   #       redirect_to dashboard_url
   #     end
   #   end
-  module ControllerConcern
+  module EmailAuthentication
     extend ActiveSupport::Concern
 
     included do
@@ -46,6 +46,8 @@ module NoPassword
         email = @authentication.email
         @authentication.delete
         verification_succeeded(email)
+      elsif @verification.different_browser?
+        verification_different_browser(@verification)
       elsif @verification.expired?
         verification_expired(@verification)
       else
@@ -76,6 +78,12 @@ module NoPassword
     def verification_expired(verification)
       flash[:alert] = "Link has expired. Please try again."
       redirect_to url_for(action: :new)
+    end
+
+    # Override to handle verification opened in a different browser.
+    def verification_different_browser(verification)
+      flash.now[:alert] = verification.errors.full_messages.to_sentence
+      render :show, status: :unprocessable_entity
     end
 
     # Override to customize how the challenge is delivered.

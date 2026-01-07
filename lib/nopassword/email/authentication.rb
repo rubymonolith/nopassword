@@ -16,14 +16,10 @@ module NoPassword
         email
       end
 
-      def challenge
-        @challenge ||= Challenge.new(@session, authentication: self, identifier:)
-      end
-
       protected
 
-      def challenge_class
-        Challenge
+      def build_challenge(**)
+        Challenge.new(@session, authentication: self, identifier:, **)
       end
     end
   end

@@ -20,14 +20,11 @@ module NoPassword
       end
 
       def challenge
-        @challenge ||= challenge_class.new(@session, identifier:)
+        @challenge ||= build_challenge(identifier:)
       end
 
       def verification(token:)
-        verification_class.new(
-          challenge: challenge_class.new(@session),
-          provided_token: token
-        )
+        build_verification(token:)
       end
 
       def save
@@ -56,7 +53,7 @@ module NoPassword
 
       def delete
         @session.delete(session_key)
-        challenge_class.delete(@session)
+        Link::Challenge.delete(@session)
       end
 
       def persisted?
@@ -65,14 +62,17 @@ module NoPassword
 
       protected
 
-      # Override in subclass to use a different challenge class
-      def challenge_class
-        Link::Challenge
+      # Override to customize how challenges are built
+      def build_challenge(**)
+        Link::Challenge.new(@session, **)
       end
 
-      # Override in subclass to use a different verification class
-      def verification_class
-        Link::Verification
+      # Override to customize how verifications are built
+      def build_verification(token:)
+        Link::Verification.new(
+          challenge: build_challenge,
+          provided_token: token
+        )
       end
 
       private

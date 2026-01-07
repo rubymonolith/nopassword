@@ -1,5 +1,5 @@
 class NoPassword::EmailAuthenticationsController < ApplicationController
-  include NoPassword::ControllerConcern
+  include NoPassword::EmailAuthentication
   include NoPassword::Routable
 
   routes.draw do
