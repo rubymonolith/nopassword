@@ -16,6 +16,12 @@ module NoPassword
     extend ActiveSupport::Concern
 
     included do
+      include Routable
+
+      routes.draw do
+        resource :email_authentication
+      end
+
       before_action :set_authentication
       before_action :set_verification, only: [:show, :update]
       helper_method :create_url, :show_url
