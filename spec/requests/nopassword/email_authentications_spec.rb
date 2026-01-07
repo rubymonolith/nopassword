@@ -4,8 +4,8 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
   let(:email) { "user@example.com" }
   subject { response }
 
-  describe "GET /email_authentication/new" do
-    before { get "/email_authentication/new" }
+  describe "GET /email_authentications/new" do
+    before { get "/email_authentications/new" }
 
     it { is_expected.to be_successful }
   end
@@ -15,18 +15,18 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
 
     context "with valid email" do
       it "returns accepted status" do
-        post "/email_authentication", params: params
+        post "/email_authentications", params: params
         expect(response).to have_http_status(:accepted)
       end
 
       it "sends an email" do
         expect {
-          post "/email_authentication", params: params
+          post "/email_authentications", params: params
         }.to have_enqueued_mail(NoPassword::EmailAuthenticationMailer, :authentication_email)
       end
 
       it "stores the challenge in session" do
-        post "/email_authentication", params: params
+        post "/email_authentications", params: params
         # Session contains challenge data (we can't directly inspect session in request specs,
         # but we can verify the flow works by following the link)
         expect(response.body).to include(email)
@@ -37,7 +37,7 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
       let(:email) { "not-an-email" }
 
       it "returns unprocessable entity" do
-        post "/email_authentication", params: params
+        post "/email_authentications", params: params
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -46,16 +46,16 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
       let(:email) { "" }
 
       it "returns unprocessable entity" do
-        post "/email_authentication", params: params
+        post "/email_authentications", params: params
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
   end
 
-  describe "GET /email_authentication/:id (show)" do
+  describe "GET /email_authentications/:id (show)" do
     context "with valid token" do
       before do
-        post "/email_authentication", params: { nopassword_email_authentication: { email: email } }
+        post "/email_authentications", params: { nopassword_email_authentication: { email: email } }
         @token = NoPassword::Email::Challenge.new(session).token rescue nil
       end
 
@@ -66,16 +66,16 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
         
         # For this test, we'll verify the flow works by checking that show renders
         # We need to maintain the session, which request specs do automatically
-        get "/email_authentication/some_token"
+        get "/email_authentications/some_token"
         expect(response).to be_successful
       end
     end
   end
 
-  describe "PATCH /email_authentication/:id (update)" do
+  describe "PATCH /email_authentications/:id (update)" do
     context "with valid token from same session" do
       before do
-        post "/email_authentication", params: { nopassword_email_authentication: { email: email } }
+        post "/email_authentications", params: { nopassword_email_authentication: { email: email } }
       end
 
       it "redirects on successful verification" do
@@ -85,7 +85,7 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
         token = challenge_data["token"]
         
         if token
-          patch "/email_authentication/#{token}"
+          patch "/email_authentications/#{token}"
           expect(response).to redirect_to(root_url)
         else
           # If we can't get the token directly, verify the flow works
@@ -96,11 +96,11 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
 
     context "with invalid token" do
       before do
-        post "/email_authentication", params: { nopassword_email_authentication: { email: email } }
+        post "/email_authentications", params: { nopassword_email_authentication: { email: email } }
       end
 
       it "returns unprocessable entity" do
-        patch "/email_authentication/invalid_token"
+        patch "/email_authentications/invalid_token"
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
@@ -108,26 +108,26 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
     context "with expired token" do
       before do
         freeze_time
-        post "/email_authentication", params: { nopassword_email_authentication: { email: email } }
+        post "/email_authentications", params: { nopassword_email_authentication: { email: email } }
       end
 
       after { unfreeze_time }
 
       it "redirects to new with flash message" do
         travel_to(11.minutes.from_now)
-        patch "/email_authentication/any_token"
+        patch "/email_authentications/any_token"
         expect(response).to redirect_to(new_email_authentication_url)
       end
     end
   end
 
-  describe "DELETE /email_authentication" do
+  describe "DELETE /email_authentications" do
     before do
-      post "/email_authentication", params: { nopassword_email_authentication: { email: email } }
+      post "/email_authentications", params: { nopassword_email_authentication: { email: email } }
     end
 
     it "redirects to root" do
-      delete "/email_authentication"
+      delete "/email_authentications"
       expect(response).to redirect_to(root_url)
     end
   end
@@ -135,7 +135,7 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
   describe "full authentication flow" do
     it "completes successfully when token matches" do
       # Step 1: Request authentication
-      post "/email_authentication", params: { nopassword_email_authentication: { email: email } }
+      post "/email_authentications", params: { nopassword_email_authentication: { email: email } }
       expect(response).to have_http_status(:accepted)
 
       # Step 2: Extract token (simulating clicking the email link)
@@ -143,7 +143,7 @@ RSpec.describe "NoPassword::EmailAuthentications", type: :request do
       # The token is stored in session, so subsequent requests can verify it
       
       # Step 3: View confirmation page
-      get "/email_authentication/test_token"
+      get "/email_authentications/test_token"
       expect(response).to be_successful
 
       # Note: Full flow testing requires access to the session token,

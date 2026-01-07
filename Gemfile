@@ -14,3 +14,7 @@ gem "appraisal"
 
 # Start debugger with binding.b [https://github.com/ruby/debug]
 # gem "debug", ">= 1.0.0"
+
+gem "logger", "~> 1.7"
+gem "benchmark", "~> 0.5.0"
+gem "ostruct", "~> 0.6.3"

@@ -18,8 +18,12 @@ module NoPassword
     included do
       include Routable
 
-      routes.draw do
-        resource :email_authentication
+      routes.draw do |controller|
+        resources :email_authentications, controller:, except: :destroy do
+          collection do
+            delete :destroy
+          end
+        end
       end
 
       before_action :set_authentication
