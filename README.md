@@ -25,7 +25,7 @@ Add the route to your `config/routes.rb`:
 nopassword EmailAuthenticationsController
 ```
 
-Restart the development server and head to `http://localhost:3000/email_authentication/new`.
+Restart the development server and head to `http://localhost:3000/email_authentications/new`.
 
 ## How It Works
 
@@ -148,17 +148,21 @@ class SessionsController < ApplicationController
 end
 ```
 
-Then define your own routes:
+Then use `nopassword` with your controller — the routes come with the concern:
 
 ```ruby
 # config/routes.rb
-resource :session, only: [:new, :create, :destroy] do
-  get ":id", action: :show, on: :collection
-  patch ":id", action: :update, on: :collection
-end
+nopassword SessionsController  # generates /sessions routes
 ```
 
-Or skip the concern entirely and use the models directly with your own views:
+The routes are derived from your controller name. To customize the path:
+
+```ruby
+# config/routes.rb
+nopassword SessionsController, path: "login"  # generates /login routes
+```
+
+Or skip the concern entirely and use the models directly with your own views and routes:
 
 ```ruby
 class SessionsController < ApplicationController
