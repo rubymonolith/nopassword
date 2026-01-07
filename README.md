@@ -43,20 +43,24 @@ The token in the email is useless without the matching session. An attacker who 
 
 If they already have the session cookie, they already have access to the session anyway.
 
-### Brute force resistance
+### How is this different from other magic link gems?
 
-| Approach | Entropy | Requests to crack in TTL |
-|----------|---------|--------------------------|
-| 6-digit code | ~20 bits | ~3,300/sec (feasible) |
-| NoPassword 2.x token | 128 bits | ~10^35/sec (impossible) |
+Most magic link gems put the entire secret in the email. Anyone with the link can authenticate from any browser.
 
-The 128-bit token is computationally impossible to brute force, even without rate limiting. You'd need more requests per second than atoms in the solar system.
+NoPassword binds the link to the user's session — the link only works in the browser that requested it. This adds a second factor: possession of the session cookie.
 
-### Comparison to magic links
+### Rate limiting
 
-Traditional magic links (like many "passwordless" systems) put the entire secret in the email. Anyone with the link can authenticate from any browser.
+NoPassword does not rate limit email sending — that's your responsibility. Use Rails' built-in rate limiting:
 
-NoPassword requires the link to be opened in the same browser that requested it, adding a second factor: possession of the session.
+```ruby
+class EmailAuthenticationsController < NoPassword::EmailAuthenticationsController
+  rate_limit to: 5, within: 1.minute, only: :create, with: -> {
+    flash[:alert] = "Too many requests. Please wait a minute."
+    redirect_to url_for(action: :new)
+  }
+end
+```
 
 ## Usage
 
@@ -96,7 +100,7 @@ class EmailAuthenticationsController < NoPassword::EmailAuthenticationsControlle
 
   # Customize how the email is sent
   def deliver_challenge(challenge)
-    NoPassword::EmailAuthenticationMailer
+    EmailAuthenticationMailer
       .with(email: challenge.email, url: show_url(challenge.token))
       .authentication_email
       .deliver_later
@@ -105,6 +109,90 @@ class EmailAuthenticationsController < NoPassword::EmailAuthenticationsControlle
   # Default URL to redirect to after authentication
   def after_authentication_url
     root_url
+  end
+end
+```
+
+### Handling Different Browser
+
+When a user opens the link in a different browser (e.g., email app's webview), the verification will fail because there's no matching session. You can detect this and show a helpful message:
+
+```ruby
+class EmailAuthenticationsController < NoPassword::EmailAuthenticationsController
+  def show
+    if @verification.different_browser?
+      # Show a page explaining they need to copy the link to their original browser
+      render :different_browser
+    else
+      super
+    end
+  end
+end
+```
+
+## Ejecting for Full Control
+
+The generator gives you views you can customize. If you need full control over the controller too, include the concern directly:
+
+```ruby
+class SessionsController < ApplicationController
+  include NoPassword::ControllerConcern
+
+  def verification_succeeded(email)
+    self.current_user = User.find_or_create_by!(email: email)
+    redirect_to dashboard_url
+  end
+end
+```
+
+Then define your own routes:
+
+```ruby
+# config/routes.rb
+resource :session, only: [:new, :create, :destroy] do
+  get ":id", action: :show, on: :collection
+  patch ":id", action: :update, on: :collection
+end
+```
+
+Or skip the concern entirely and use the models directly with your own views:
+
+```ruby
+class SessionsController < ApplicationController
+  def new
+    @authentication = NoPassword::Email::Authentication.new(session)
+  end
+
+  def create
+    @authentication = NoPassword::Email::Authentication.new(session)
+    @authentication.email = params[:email]
+
+    if @authentication.valid? && @authentication.challenge.save
+      @authentication.save
+      # Send your own email
+      SessionMailer.with(url: verify_url(@authentication.challenge.token)).deliver_later
+      redirect_to :check_email
+    else
+      render :new, status: :unprocessable_entity
+    end
+  end
+
+  def show
+    @authentication = NoPassword::Email::Authentication.new(session)
+    @verification = @authentication.verification(token: params[:id])
+  end
+
+  def update
+    @authentication = NoPassword::Email::Authentication.new(session)
+    @verification = @authentication.verification(token: params[:id])
+
+    if @verification.verify
+      self.current_user = User.find_or_create_by!(email: @authentication.email)
+      @authentication.delete
+      redirect_to dashboard_url
+    else
+      render :show, status: :unprocessable_entity
+    end
   end
 end
 ```
