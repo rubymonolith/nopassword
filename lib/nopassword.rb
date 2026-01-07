@@ -14,9 +14,12 @@ module NoPassword
     Pathname.new(__dir__).join("..")
   end
 
+  # Base error class for NoPassword exceptions
+  class Error < StandardError; end
+
   # Raised when authentication is required but the user is not authenticated.
   # Carries context (email, return_url) that can be used to redirect to auth.
-  class UnauthenticatedError < StandardError
+  class UnauthenticatedError < Error
     attr_reader :email, :return_url
 
     def initialize(email: nil, return_url: nil, message: "Authentication required")

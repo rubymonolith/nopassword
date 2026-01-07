@@ -1,12 +1,14 @@
 module NoPassword
   class OAuth::GoogleAuthorizationsController < ApplicationController
-    CLIENT_ID = ENV["GOOGLE_CLIENT_ID"]
-    CLIENT_SECRET = ENV["GOOGLE_CLIENT_SECRET"]
-    SCOPE = "openid email profile"
+    include OAuth
 
     AUTHORIZATION_URL = URI("https://accounts.google.com/o/oauth2/v2/auth")
     TOKEN_URL = URI("https://www.googleapis.com/oauth2/v4/token")
     USER_INFO_URL = URI("https://www.googleapis.com/oauth2/v3/userinfo")
+
+    setting :client_id
+    setting :client_secret
+    setting :scope, default: "openid email profile"
 
     include Routable
 
@@ -33,13 +35,15 @@ module NoPassword
       end
     end
 
+
+
     protected
       def authorization_succeeded(user_info)
         redirect_to root_url
       end
 
       def authorization_failed
-        raise "Implement authorization_failed to handle failed authorizations", NotImplementedError
+        raise NotImplementedError, "Implement authorization_failed to handle failed authorizations"
       end
 
       def validate_state_token
@@ -75,18 +79,6 @@ module NoPassword
         })
       end
 
-      def client_id
-        self.class::CLIENT_ID
-      end
-
-      def client_secret
-        self.class::CLIENT_SECRET
-      end
-
-      def scope
-        self.class::SCOPE
-      end
-
       def request_user_info(access_token:)
         HTTP.auth("Bearer #{access_token}").get(USER_INFO_URL)
       end
@@ -95,5 +87,7 @@ module NoPassword
       def callback_url
         url_for(action: :show, only_path: false)
       end
+
+
   end
 end

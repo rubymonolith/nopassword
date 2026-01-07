@@ -5,12 +5,7 @@ module NoPassword
   # Additional API documentation at:
   #  - https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api
   class OAuth::AppleAuthorizationsController < ApplicationController
-    CLIENT_ID = ENV["APPLE_CLIENT_ID"]
-    TEAM_ID = ENV["APPLE_TEAM_ID"]
-    KEY_ID = ENV["APPLE_KEY_ID"]
-    PRIVATE_KEY = ENV["APPLE_PRIVATE_KEY"]  # Typically, the contents of the .p8 file
-
-    SCOPE = "name email"
+    include OAuth
 
     AUTHORIZATION_URL = URI("https://appleid.apple.com/auth/authorize")
     TOKEN_URL = URI("https://appleid.apple.com/auth/token")
@@ -18,6 +13,12 @@ module NoPassword
 
     # Length of `state` parameter token passed into OAuth flow.
     OAUTH_STATE_TOKEN_LENGTH = 32
+
+    setting :client_id
+    setting :team_id
+    setting :key_id
+    setting :private_key_pem  # Contents of the .p8 file
+    setting :scope, default: "name email"
 
     # Since Apple POST's this payload back to the server, the built-in
     # `verify_authenticity_token` callback will fail because the origin
@@ -60,37 +61,15 @@ module NoPassword
       redirect_to authorization_url.to_s, allow_other_host: true
     end
 
+
+
     protected
-      def client_id
-        self.class::CLIENT_ID
-      end
-
-      def team_id
-        self.class::TEAM_ID
-      end
-
-      def key_id
-        self.class::KEY_ID
-      end
-
-      def scope
-        self.class::SCOPE
-      end
-
-      def private_key
-        OpenSSL::PKey::EC.new self.class::PRIVATE_KEY
-      end
-
       def authorization_succeeded(user_info)
-        user = User.find_or_create_by(email: user_info.fetch("email"))
-        user ||= user_info.fetch("name")
-
-        self.current_user = user
-        redirect_to_return_url
+        redirect_to root_url
       end
 
       def authorization_failed
-        raise "Implement authorization_failed to handle failed authorizations", NotImplementedError
+        raise NotImplementedError, "Implement authorization_failed to handle failed authorizations"
       end
 
       def validate_state_token
@@ -168,6 +147,12 @@ module NoPassword
       # The URL the OAuth provider will redirect the user back to after authenticating.
       def callback_url
         url_for(action: :callback, only_path: false)
+      end
+
+    private
+
+      def private_key
+        OpenSSL::PKey::EC.new private_key_pem
       end
   end
 end
