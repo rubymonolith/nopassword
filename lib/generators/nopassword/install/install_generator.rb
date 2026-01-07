@@ -1,4 +1,4 @@
-module Nopassword
+module NoPassword
   class InstallGenerator < Rails::Generators::Base
     source_root File.expand_path("templates", __dir__)
 
