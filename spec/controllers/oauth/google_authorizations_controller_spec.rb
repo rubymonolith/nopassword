@@ -3,13 +3,20 @@ require "rails_helper"
 RSpec.describe NoPassword::OAuth::GoogleAuthorizationsController, type: :controller do
   before do
     allow(controller).to receive(:callback_url).and_return("https://example.com/callback")
+    described_class.define_singleton_method(:client_id) { "test-client-id" }
+    described_class.define_singleton_method(:client_secret) { "test-client-secret" }
+  end
+
+  after do
+    described_class.singleton_class.remove_method(:client_id) if described_class.respond_to?(:client_id)
+    described_class.singleton_class.remove_method(:client_secret) if described_class.respond_to?(:client_secret)
   end
 
   describe "authorization_url" do
     it "includes required OAuth parameters" do
       url = controller.send(:authorization_url)
       expect(url.to_s).to include("accounts.google.com")
-      expect(url.to_s).to include("client_id=")
+      expect(url.to_s).to include("client_id=test-client-id")
       expect(url.to_s).to include("redirect_uri=")
       expect(url.to_s).to include("response_type=code")
       expect(url.to_s).to include("scope=")
@@ -51,20 +58,4 @@ RSpec.describe NoPassword::OAuth::GoogleAuthorizationsController, type: :control
     end
   end
 
-  describe "setting protection" do
-    it "excludes settings from action_methods" do
-      expect(described_class.action_methods).not_to include("client_id")
-      expect(described_class.action_methods).not_to include("client_secret")
-      expect(described_class.action_methods).not_to include("scope")
-    end
-
-    it "raises SettingExposedError if a setting is called as an action" do
-      # Simulate someone accidentally making client_secret public and routing to it
-      allow(controller).to receive(:action_name).and_return("client_secret")
-
-      expect {
-        controller.process_action("client_secret")
-      }.to raise_error(NoPassword::OAuth::SettingExposedError, /client_secret/)
-    end
-  end
 end

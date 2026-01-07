@@ -3,13 +3,24 @@ require "rails_helper"
 RSpec.describe NoPassword::OAuth::AppleAuthorizationsController, type: :controller do
   before do
     allow(controller).to receive(:callback_url).and_return("https://example.com/callback")
+    described_class.define_singleton_method(:client_id) { "test-client-id" }
+    described_class.define_singleton_method(:team_id) { "test-team-id" }
+    described_class.define_singleton_method(:key_id) { "test-key-id" }
+    described_class.define_singleton_method(:private_key) { "test-private-key" }
+  end
+
+  after do
+    described_class.singleton_class.remove_method(:client_id) if described_class.respond_to?(:client_id)
+    described_class.singleton_class.remove_method(:team_id) if described_class.respond_to?(:team_id)
+    described_class.singleton_class.remove_method(:key_id) if described_class.respond_to?(:key_id)
+    described_class.singleton_class.remove_method(:private_key) if described_class.respond_to?(:private_key)
   end
 
   describe "authorization_url" do
     it "includes required OAuth parameters" do
       url = controller.send(:authorization_url)
       expect(url.to_s).to include("appleid.apple.com")
-      expect(url.to_s).to include("client_id=")
+      expect(url.to_s).to include("client_id=test-client-id")
       expect(url.to_s).to include("redirect_uri=")
       expect(url.to_s).to include("response_type=code")
       expect(url.to_s).to include("response_mode=form_post")
@@ -18,7 +29,7 @@ RSpec.describe NoPassword::OAuth::AppleAuthorizationsController, type: :controll
     end
 
     it "generates and stores state token in session" do
-      controller.send(:authorization_url)
+      url = controller.send(:authorization_url)
       expect(session[:oauth_state_token]).to be_present
       expect(session[:oauth_state_token].length).to eq(32)
     end
@@ -66,10 +77,10 @@ RSpec.describe NoPassword::OAuth::AppleAuthorizationsController, type: :controll
     before do
       # Generate a test EC key for specs
       test_key = OpenSSL::PKey::EC.generate("prime256v1")
-      allow(controller).to receive(:private_key).and_return(test_key)
-      allow(controller).to receive(:team_id).and_return("TEAM123")
-      allow(controller).to receive(:client_id).and_return("com.example.app")
-      allow(controller).to receive(:key_id).and_return("KEY123")
+      described_class.define_singleton_method(:private_key) { test_key.to_pem }
+      described_class.define_singleton_method(:team_id) { "TEAM123" }
+      described_class.define_singleton_method(:client_id) { "com.example.app" }
+      described_class.define_singleton_method(:key_id) { "KEY123" }
     end
 
     it "generates a valid JWT" do

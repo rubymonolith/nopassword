@@ -5,8 +5,6 @@ module NoPassword
   # Additional API documentation at:
   #  - https://developer.apple.com/documentation/sign_in_with_apple/sign_in_with_apple_rest_api
   class OAuth::AppleAuthorizationsController < ApplicationController
-    include OAuth
-
     AUTHORIZATION_URL = URI("https://appleid.apple.com/auth/authorize")
     TOKEN_URL = URI("https://appleid.apple.com/auth/token")
     KEYS_URL = URI("https://appleid.apple.com/auth/keys")
@@ -14,11 +12,7 @@ module NoPassword
     # Length of `state` parameter token passed into OAuth flow.
     OAUTH_STATE_TOKEN_LENGTH = 32
 
-    setting :client_id
-    setting :team_id
-    setting :key_id
-    setting :private_key_pem  # Contents of the .p8 file
-    setting :scope, default: "name email"
+    def self.scope = "name email"
 
     # Since Apple POST's this payload back to the server, the built-in
     # `verify_authenticity_token` callback will fail because the origin
@@ -89,11 +83,11 @@ module NoPassword
       # Documentation at https://developer.apple.com/documentation/accountorganizationaldatasharing/request-an-authorization
       def authorization_url
         AUTHORIZATION_URL.build.query(
-          client_id: client_id,
+          client_id: self.class.client_id,
           redirect_uri: callback_url,
           response_type: "code",
           response_mode: "form_post",
-          scope: scope,
+          scope: self.class.scope,
           state: generate_state_token
         )
       end
@@ -107,7 +101,7 @@ module NoPassword
       def request_access_token
         client_secret = generate_client_secret
         HTTP.post(TOKEN_URL, form: {
-          client_id: client_id,
+          client_id: self.class.client_id,
           client_secret: client_secret,
           code: params.fetch(:code),
           grant_type: "authorization_code",
@@ -121,7 +115,7 @@ module NoPassword
           iss: "https://appleid.apple.com",
           verify_iat: true,
           verify_aud: true,
-          aud: client_id,
+          aud: self.class.client_id,
           algorithms: ["RS256"],
           jwks: request_jwks.parse
         }
@@ -133,13 +127,13 @@ module NoPassword
       # Documentation at https://developer.apple.com/documentation/accountorganizationaldatasharing/creating-a-client-secret
       def generate_client_secret
         payload = {
-          iss: team_id,
+          iss: self.class.team_id,
           aud: "https://appleid.apple.com",
-          sub: client_id,
+          sub: self.class.client_id,
           iat: Time.now.to_i,
           exp: Time.now.to_i + 60
         }
-        headers = { kid: key_id }
+        headers = { kid: self.class.key_id }
 
         JWT.encode(payload, private_key, "ES256", headers)
       end
@@ -152,7 +146,7 @@ module NoPassword
     private
 
       def private_key
-        OpenSSL::PKey::EC.new private_key_pem
+        OpenSSL::PKey::EC.new self.class.private_key
       end
   end
 end

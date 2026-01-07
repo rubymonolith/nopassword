@@ -98,6 +98,12 @@ class EmailAuthenticationsController < NoPassword::EmailAuthenticationsControlle
     render :show, status: :unprocessable_entity
   end
 
+  # Called when the link is opened in a different browser
+  def verification_different_browser(verification)
+    flash.now[:alert] = "Please open this link in the browser where you requested it."
+    render :show, status: :unprocessable_entity
+  end
+
   # Customize how the email is sent
   def deliver_challenge(challenge)
     EmailAuthenticationMailer
@@ -115,17 +121,13 @@ end
 
 ### Handling Different Browser
 
-When a user opens the link in a different browser (e.g., email app's webview), the verification will fail because there's no matching session. You can detect this and show a helpful message:
+When a user opens the link in a different browser (e.g., email app's webview), the verification will fail because there's no matching session. Override the `verification_different_browser` hook to customize this behavior:
 
 ```ruby
 class EmailAuthenticationsController < NoPassword::EmailAuthenticationsController
-  def show
-    if @verification.different_browser?
-      # Show a page explaining they need to copy the link to their original browser
-      render :different_browser
-    else
-      super
-    end
+  def verification_different_browser(verification)
+    # Show a page explaining they need to copy the link to their original browser
+    render :different_browser
   end
 end
 ```
@@ -136,7 +138,7 @@ The generator gives you views you can customize. If you need full control over t
 
 ```ruby
 class SessionsController < ApplicationController
-  include NoPassword::ControllerConcern
+  include NoPassword::EmailAuthentication
 
   def verification_succeeded(email)
     self.current_user = User.find_or_create_by!(email: email)
@@ -203,19 +205,18 @@ NoPassword is organized into composable modules:
 
 ```
 NoPassword
-├── Link                          # Token challenge/verification
-│   ├── Base                      # Session storage mechanics
-│   ├── Challenge                 # Generates token, stores identifier, TTL
-│   └── Verification              # Validates token, checks expiration
-├── Session                       # Session management
-│   ├── Authentication            # Stores return_url, wraps Link
-│   └── Concern                   # Controller helpers
-├── Email                         # Email-specific implementation
-│   ├── Authentication            # Adds email validation
-│   ├── Challenge                 # Aliases identifier as email
-│   └── Mailer                    # ActionMailer for sending links
-├── ControllerConcern             # All controller logic
-├── EmailAuthenticationsController
+├── Link                            # Token challenge/verification
+│   ├── Base                        # Session storage mechanics
+│   ├── Challenge                   # Generates token, stores identifier, TTL
+│   └── Verification                # Validates token, checks expiration
+├── Session                         # Controller helpers for session management
+│   └── Authentication              # Stores return_url, wraps Link
+├── Email                           # Email-specific implementation
+│   ├── Authentication              # Adds email validation
+│   ├── Challenge                   # Aliases identifier as email
+│   └── Mailer                      # ActionMailer for sending links
+├── EmailAuthentication             # Controller concern with all actions
+├── EmailAuthenticationsController  # Ready-to-use controller
 └── OAuth
     ├── GoogleAuthorizationsController
     └── AppleAuthorizationsController
@@ -241,25 +242,35 @@ end
 NoPassword includes OAuth controllers for Google and Apple. Create a controller that inherits from the OAuth controller:
 
 ```ruby
-# ./app/controllers/google_authorizations_controller.rb
+# app/controllers/google_authorizations_controller.rb
 class GoogleAuthorizationsController < NoPassword::OAuth::GoogleAuthorizationsController
-  CLIENT_ID = ENV["GOOGLE_CLIENT_ID"]
-  CLIENT_SECRET = ENV["GOOGLE_CLIENT_SECRET"]
-  SCOPE = "openid email profile"
+  def self.credentials = Rails.application.credentials.google
+  def self.client_id = credentials.client_id
+  def self.client_secret = credentials.client_secret
 
   protected
+    def authorization_succeeded(sso)
+      user = User.find_or_create_by(email: sso.fetch("email"))
+      user.update!(name: sso.fetch("name"))
 
-  def authorization_succeeded(sso)
-    user = User.find_or_create_by(email: sso.fetch("email"))
-    user.update!(name: sso.fetch("name"))
+      self.current_user = user
+      redirect_to root_url
+    end
 
-    self.current_user = user
-    redirect_to root_url
-  end
+    def authorization_failed
+      redirect_to login_path, alert: "OAuth authorization failed"
+    end
+end
+```
 
-  def authorization_failed
-    redirect_to login_path, alert: "OAuth authorization failed"
-  end
+Or with environment variables:
+
+```ruby
+class GoogleAuthorizationsController < NoPassword::OAuth::GoogleAuthorizationsController
+  def self.client_id = ENV["GOOGLE_CLIENT_ID"]
+  def self.client_secret = ENV["GOOGLE_CLIENT_SECRET"]
+
+  # ...
 end
 ```
 
