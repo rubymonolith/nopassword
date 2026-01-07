@@ -1,6 +1,7 @@
 # NoPassword
 
-[![Ruby](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml) [![Maintainability](https://api.codeclimate.com/v1/badges/1dab74df8828deddd5f3/maintainability)](https://codeclimate.com/github/rocketshipio/nopassword/maintainability)
+[![Ruby](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml)
+[![Gem Version](https://badge.fury.io/rb/nopassword.svg)](https://rubygems.org/gems/nopassword)
 
 NoPassword is a toolkit that makes it easy to implement secure, passwordless authentication via email, SMS, or any other side-channel. It also includes OAuth controllers for Google and Apple sign-in.
 
