@@ -1,4 +1,4 @@
-class NoPassword::EmailAuthenticationMailer < ActionMailer::Base
+class NoPassword::EmailAuthenticationMailer < ApplicationMailer
   def authentication_email
     @email = params[:email]
     @url = params[:url]
