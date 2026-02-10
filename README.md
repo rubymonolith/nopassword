@@ -34,7 +34,7 @@ NoPassword uses a session-bound token approach:
 1. User enters their email in your app
 2. A 128-bit random token is generated and stored in the user's session
 3. A link containing the token is emailed to the user
-4. User clicks the link — it only works in the same browser that requested it
+4. User clicks the link, which only works in the same browser that requested it
 
 ### Why is this secure?
 
@@ -48,11 +48,11 @@ If they already have the session cookie, they already have access to the session
 
 Most magic link gems put the entire secret in the email. Anyone with the link can authenticate from any browser.
 
-NoPassword binds the link to the user's session — the link only works in the browser that requested it. This adds a second factor: possession of the session cookie.
+NoPassword binds the link to the user's session. The link only works in the browser that requested it, adding a second factor: possession of the session cookie.
 
 ### Rate limiting
 
-NoPassword does not rate limit email sending — that's your responsibility. Use Rails' built-in rate limiting:
+NoPassword does not rate limit email sending. That's your responsibility. Use Rails' built-in rate limiting:
 
 ```ruby
 class EmailAuthenticationsController < NoPassword::EmailAuthenticationsController
@@ -148,7 +148,7 @@ class SessionsController < ApplicationController
 end
 ```
 
-Then use `nopassword` with your controller — the routes come with the concern:
+Then use `nopassword` with your controller. The routes come with the concern:
 
 ```ruby
 # config/routes.rb
