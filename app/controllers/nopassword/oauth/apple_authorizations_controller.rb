@@ -16,6 +16,7 @@ module NoPassword
     # is appleid.apple.com. CSRF protection is handled by requiring POST
     # on the `create` action to initiate the OAuth flow.
     skip_forgery_protection only: :callback
+    before_action :require_post_request, only: :create
 
     include Routable
 
@@ -60,6 +61,16 @@ module NoPassword
 
       def authorization_failed
         raise NotImplementedError, "Implement authorization_failed to handle failed authorizations"
+      end
+
+      def require_post_request
+        return if request.post?
+
+        raise ActionController::RoutingError, <<~ERROR.squish
+          OAuth authorization MUST be initiated via POST to prevent CSRF attacks.
+          GET requests bypass Rails' built-in CSRF protection and leave your users
+          vulnerable. Fix your form to use method: :post immediately.
+        ERROR
       end
 
       # Documentation at https://developer.apple.com/documentation/accountorganizationaldatasharing/request-an-authorization
