@@ -26,19 +26,19 @@ RSpec.describe NoPassword::OAuth::AppleAuthorizationsController, type: :controll
       expect(url.to_s).to include("response_mode=form_post")
       expect(url.to_s).to include("scope=")
       expect(url.to_s).to include("state=")
+      expect(url.to_s).to include("nonce=")
     end
 
-    it "generates and stores state token in session" do
-      url = controller.send(:authorization_url)
-      expect(session[:oauth_state_token]).to be_present
-      expect(session[:oauth_state_token].length).to eq(32)
+    it "generates and stores nonce in session" do
+      controller.send(:authorization_url)
+      expect(session[:apple_oauth_nonce]).to be_present
+      expect(session[:apple_oauth_nonce].length).to eq(32)
     end
   end
 
   describe "validate_state_token" do
     it "raises on invalid state token" do
-      session[:oauth_state_token] = "a" * 32
-      allow(controller).to receive(:params).and_return({ state: "b" * 32 })
+      allow(controller).to receive(:params).and_return(ActionController::Parameters.new(state: "invalid"))
 
       expect {
         controller.send(:validate_state_token)
@@ -46,9 +46,8 @@ RSpec.describe NoPassword::OAuth::AppleAuthorizationsController, type: :controll
     end
 
     it "passes with valid state token" do
-      token = "a" * 32
-      session[:oauth_state_token] = token
-      allow(controller).to receive(:params).and_return({ state: token })
+      token = controller.send(:form_authenticity_token)
+      allow(controller).to receive(:params).and_return(ActionController::Parameters.new(state: token))
 
       expect {
         controller.send(:validate_state_token)
@@ -56,20 +55,20 @@ RSpec.describe NoPassword::OAuth::AppleAuthorizationsController, type: :controll
     end
   end
 
-  describe "generate_state_token" do
+  describe "generate_nonce" do
     it "generates a 32-character token" do
-      token = controller.send(:generate_state_token)
-      expect(token.length).to eq(32)
+      nonce = controller.send(:generate_nonce)
+      expect(nonce.length).to eq(32)
     end
 
-    it "stores token in session" do
-      token = controller.send(:generate_state_token)
-      expect(session[:oauth_state_token]).to eq(token)
+    it "stores nonce in session" do
+      nonce = controller.send(:generate_nonce)
+      expect(session[:apple_oauth_nonce]).to eq(nonce)
     end
 
-    it "generates unique tokens" do
-      tokens = 10.times.map { controller.send(:generate_state_token) }
-      expect(tokens.uniq.length).to eq(10)
+    it "generates unique nonces" do
+      nonces = 10.times.map { controller.send(:generate_nonce) }
+      expect(nonces.uniq.length).to eq(10)
     end
   end
 
