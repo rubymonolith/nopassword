@@ -80,8 +80,22 @@ module NoPassword
           redirect_uri: callback_url,
           response_type: "code",
           response_mode: "form_post",
-          scope: self.class.scope
+          scope: self.class.scope,
+          nonce: generate_nonce
         )
+      end
+
+      def generate_nonce
+        session[:apple_oauth_nonce] = SecureRandom.hex(16)
+      end
+
+      def verify_nonce!(payload)
+        expected = session.delete(:apple_oauth_nonce)
+        actual = payload["nonce"]
+
+        return if expected && actual && ActiveSupport::SecurityUtils.secure_compare(expected, actual)
+
+        raise ActionController::InvalidAuthenticityToken, "Apple OAuth nonce verification failed"
       end
 
       # Documentation at https://developer.apple.com/documentation/accountorganizationaldatasharing/fetch-apple's-public-key-for-verifying-token-signature
@@ -112,7 +126,7 @@ module NoPassword
           jwks: request_jwks.parse
         }
         payload, _header = JWT.decode(id_token, nil, true, jwt_options)
-        # verify_nonce!(payload)
+        verify_nonce!(payload)
         payload
       end
 
@@ -122,8 +136,8 @@ module NoPassword
           iss: self.class.team_id,
           aud: "https://appleid.apple.com",
           sub: self.class.client_id,
-          iat: Time.now.to_i,
-          exp: Time.now.to_i + 60
+          iat: Time.current.to_i,
+          exp: Time.current.to_i + 60
         }
         headers = { kid: self.class.key_id }
 
