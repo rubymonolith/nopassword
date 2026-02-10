@@ -333,6 +333,29 @@ Passwords are a pain:
 2. **People forget passwords** - Password reset flows use email anyway
 3. **Password fatigue** - Users appreciate not having to create yet another password
 
+## Prior Art
+
+NoPassword isn't the first authentication library for Rails, but it takes a different approach:
+
+- **[Devise](https://github.com/heartcombo/devise)** - The kitchen sink of Rails authentication. Great if you need everything, but heavyweight for passwordless-only apps. Its [devise-passwordless](https://github.com/abevoelker/devise-passwordless) extension exists but inherits all of Devise's complexity.
+
+- **[OmniAuth](https://github.com/omniauth/omniauth)** - Rack middleware for OAuth. The problem: it runs at the Rack layer, so you don't have access to Rails routes, path helpers, or URL generation. You end up hardcoding callback URLs and fighting the framework.
+
+- **[Passwordless](https://github.com/mikker/passwordless)** - Similar idea to NoPassword, but tries to manage `current_user` and authorization. NoPassword stops at authentication and lets you handle the rest.
+
+- **[Rodauth](https://github.com/jeremyevans/rodauth)** - Powerful and secure, but also Rack-based with its own routing DSL.
+
+### Why controllers instead of Rack middleware?
+
+Rack middleware runs outside of Rails. That means:
+
+- No access to `url_for`, named routes, or path helpers
+- No Rails route introspection or inflection
+- Callback URLs get hardcoded
+- Debugging requires understanding a separate abstraction ("strategies", "phases", etc.)
+
+NoPassword is just Rails controllers. You inherit from them, override hooks, and use `url_for` like anywhere else in Rails. No new abstractions to learn.
+
 ## Contributing
 
 If you'd like to contribute, start a discussion at https://github.com/rocketshipio/nopassword/discussions/categories/ideas.
