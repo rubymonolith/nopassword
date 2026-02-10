@@ -6,13 +6,14 @@ module NoPassword
 
     def self.scope = "openid email profile"
 
+    before_action :require_post_request, only: :create
+    before_action :validate_state_token, only: :show
+
     include Routable
 
     routes.draw do
       resource :google_authorization, only: [:show, :create]
     end
-
-    before_action :validate_state_token, only: :show
 
     def create
       redirect_to authorization_url.to_s, allow_other_host: true
@@ -42,10 +43,20 @@ module NoPassword
         raise NotImplementedError, "Implement authorization_failed to handle failed authorizations"
       end
 
+      def require_post_request
+        return if request.post?
+
+        raise ActionController::RoutingError, <<~ERROR.squish
+          OAuth authorization MUST be initiated via POST to prevent CSRF attacks.
+          GET requests bypass Rails' built-in CSRF protection and leave your users
+          vulnerable. Fix your form to use method: :post immediately.
+        ERROR
+      end
+
       def validate_state_token
         state_token = params.fetch(:state)
         unless valid_authenticity_token?(session, state_token)
-          raise ActionController::InvalidAuthenticityToken, "The state=#{state_token} token is inauthentic."
+          raise ActionController::InvalidAuthenticityToken, "Google OAuth state token is invalid"
         end
       end
 

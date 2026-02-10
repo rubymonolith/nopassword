@@ -7,9 +7,8 @@ module NoPassword
 
     def self.scope = "read:user user:email"
 
-    # CSRF protection is handled by requiring POST on the `create` action
-    # to initiate the OAuth flow.
     before_action :require_post_request, only: :create
+    before_action :validate_state_token, only: :show
 
     include Routable
 
@@ -55,12 +54,20 @@ module NoPassword
         ERROR
       end
 
+      def validate_state_token
+        state_token = params.fetch(:state)
+        unless valid_authenticity_token?(session, state_token)
+          raise ActionController::InvalidAuthenticityToken, "GitHub OAuth state token is invalid"
+        end
+      end
+
       # Documentation at https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#1-request-a-users-github-identity
       def authorization_url
         AUTHORIZATION_URL.build.query(
           client_id: self.class.client_id,
           redirect_uri: callback_url,
-          scope: self.class.scope
+          scope: self.class.scope,
+          state: form_authenticity_token
         )
       end
 

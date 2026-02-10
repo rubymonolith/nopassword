@@ -17,6 +17,7 @@ module NoPassword
     # on the `create` action to initiate the OAuth flow.
     skip_forgery_protection only: :callback
     before_action :require_post_request, only: :create
+    before_action :validate_state_token, only: :show
 
     include Routable
 
@@ -31,9 +32,9 @@ module NoPassword
     def callback
       # There's no session when the POST happens to this callback (thanks Apple and
       # strict cookies!), so we need to redirect to "show" to get the session back
-      # and setup the user for success.
+      # and setup the user for success. Pass state through for CSRF validation.
       id_token = request_access_token.parse.fetch("id_token")
-      redirect_to url_for(action: :show, id_token: id_token)
+      redirect_to url_for(action: :show, id_token: id_token, state: params[:state])
     end
 
     def show
@@ -73,6 +74,13 @@ module NoPassword
         ERROR
       end
 
+      def validate_state_token
+        state_token = params.fetch(:state)
+        unless valid_authenticity_token?(session, state_token)
+          raise ActionController::InvalidAuthenticityToken, "Apple OAuth state token is invalid"
+        end
+      end
+
       # Documentation at https://developer.apple.com/documentation/accountorganizationaldatasharing/request-an-authorization
       def authorization_url
         AUTHORIZATION_URL.build.query(
@@ -81,6 +89,7 @@ module NoPassword
           response_type: "code",
           response_mode: "form_post",
           scope: self.class.scope,
+          state: form_authenticity_token,
           nonce: generate_nonce
         )
       end
