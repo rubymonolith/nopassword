@@ -3,7 +3,7 @@
 [![Ruby](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml/badge.svg)](https://github.com/rocketshipio/nopassword/actions/workflows/ruby.yml)
 [![Gem Version](https://badge.fury.io/rb/nopassword.svg)](https://rubygems.org/gems/nopassword)
 
-NoPassword is a toolkit that makes it easy to implement secure, passwordless authentication via email, SMS, or any other side-channel. It also includes OAuth controllers for Google and Apple sign-in.
+NoPassword is a toolkit that makes it easy to implement secure, passwordless authentication via email, SMS, or any other side-channel. It also includes OAuth controllers for Google, Apple, and GitHub sign-in.
 
 ## Installation
 
@@ -224,7 +224,8 @@ NoPassword
 ├── EmailAuthenticationsController  # Ready-to-use controller
 └── OAuth
     ├── GoogleAuthorizationsController
-    └── AppleAuthorizationsController
+    ├── AppleAuthorizationsController
+    └── GithubAuthorizationsController
 ```
 
 ### Extending for SMS or other channels
@@ -244,7 +245,7 @@ end
 
 ## OAuth Authorizations
 
-NoPassword includes OAuth controllers for Google and Apple. Create a controller that inherits from the OAuth controller:
+NoPassword includes OAuth controllers for Google, Apple, and GitHub. Create a controller that inherits from the OAuth controller:
 
 ```ruby
 # app/controllers/google_authorizations_controller.rb
@@ -279,6 +280,32 @@ class GoogleAuthorizationsController < NoPassword::OAuth::GoogleAuthorizationsCo
 end
 ```
 
+### GitHub
+
+```ruby
+class GithubAuthorizationsController < NoPassword::OAuth::GithubAuthorizationsController
+  def self.client_id = ENV["GITHUB_CLIENT_ID"]
+  def self.client_secret = ENV["GITHUB_CLIENT_SECRET"]
+
+  protected
+    def authorization_succeeded(user_info)
+      user = User.find_or_create_by!(github_id: user_info.fetch("id"))
+      user.update!(
+        name: user_info["name"],
+        email: user_info["email"],
+        github_login: user_info["login"]
+      )
+
+      self.current_user = user
+      redirect_to root_url
+    end
+
+    def authorization_failed
+      redirect_to login_path, alert: "GitHub authorization failed"
+    end
+end
+```
+
 Add the route:
 
 ```ruby
@@ -286,11 +313,15 @@ Add the route:
 nopassword GoogleAuthorizationsController
 ```
 
-Create a sign-in button:
+Create sign-in buttons (OAuth must be initiated via POST for CSRF protection):
 
 ```erb
 <%= form_tag google_authorization_path, data: { turbo: false } do %>
   <%= submit_tag "Sign in with Google" %>
+<% end %>
+
+<%= form_tag github_authorization_path, data: { turbo: false } do %>
+  <%= submit_tag "Sign in with GitHub" %>
 <% end %>
 ```
 
