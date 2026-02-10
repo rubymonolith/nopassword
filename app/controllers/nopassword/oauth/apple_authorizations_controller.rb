@@ -9,17 +9,13 @@ module NoPassword
     TOKEN_URL = URI("https://appleid.apple.com/auth/token")
     KEYS_URL = URI("https://appleid.apple.com/auth/keys")
 
-    # Length of `state` parameter token passed into OAuth flow.
-    OAUTH_STATE_TOKEN_LENGTH = 32
-
     def self.scope = "name email"
 
-    # Since Apple POST's this payload back to the server, the built-in
+    # Since Apple POSTs this payload back to the server, the built-in
     # `verify_authenticity_token` callback will fail because the origin
-    # is appleid.apple.com (Rails wants same origin). This skips that
-    # check and instead uses `validate_state_token` to verify CSRF.
+    # is appleid.apple.com. CSRF protection is handled by requiring POST
+    # on the `create` action to initiate the OAuth flow.
     skip_forgery_protection only: :callback
-    before_action :validate_state_token, only: :show
 
     include Routable
 
@@ -33,10 +29,10 @@ module NoPassword
 
     def callback
       # There's no session when the POST happens to this callback (thanks Apple and
-      # strict cookies!), so we need to redirect to "show" to get the session back,
-      # verify the nonce, and setup the user for success.
+      # strict cookies!), so we need to redirect to "show" to get the session back
+      # and setup the user for success.
       id_token = request_access_token.parse.fetch("id_token")
-      redirect_to url_for(action: :show, id_token: id_token, **params.permit(:state))
+      redirect_to url_for(action: :show, id_token: id_token)
     end
 
     def show
@@ -66,20 +62,6 @@ module NoPassword
         raise NotImplementedError, "Implement authorization_failed to handle failed authorizations"
       end
 
-      def validate_state_token
-        unless valid_state_token? params.fetch(:state)
-          raise ActionController::InvalidAuthenticityToken, "The OAuth state token is inauthentic."
-        end
-      end
-
-      def generate_state_token
-        session[:oauth_state_token] = SecureRandom.base58(OAUTH_STATE_TOKEN_LENGTH)
-      end
-
-      def valid_state_token?(token)
-        ActiveSupport::SecurityUtils.fixed_length_secure_compare session.fetch(:oauth_state_token), token
-      end
-
       # Documentation at https://developer.apple.com/documentation/accountorganizationaldatasharing/request-an-authorization
       def authorization_url
         AUTHORIZATION_URL.build.query(
@@ -87,8 +69,7 @@ module NoPassword
           redirect_uri: callback_url,
           response_type: "code",
           response_mode: "form_post",
-          scope: self.class.scope,
-          state: generate_state_token
+          scope: self.class.scope
         )
       end
 
